@@ -583,6 +583,7 @@ class ACEStepPipeline:
         n_max=1.0,
         n_avg=1,
         scheduler_type="euler",
+        progress=None,
     ):
 
         do_classifier_free_guidance = True
@@ -658,6 +659,8 @@ class ACEStepPipeline:
         logger.info("flowedit start from {} to {}".format(n_min, n_max))
 
         for i, t in tqdm(enumerate(timesteps), total=T_steps):
+            if progress:
+                progress((i + 1) / T_steps, desc="Generating...")
 
             if i < n_min:
                 continue
@@ -842,6 +845,7 @@ class ACEStepPipeline:
         audio2audio_enable=False,
         ref_audio_strength=0.5,
         ref_latents=None,
+        progress=None,
     ):
 
         logger.info(
@@ -1185,6 +1189,8 @@ class ACEStepPipeline:
             return sample
 
         for i, t in tqdm(enumerate(timesteps), total=num_inference_steps):
+            if progress:
+                progress((i + 1) / num_inference_steps, desc="Generating...")
 
             if is_repaint:
                 if i < n_min:
@@ -1469,9 +1475,12 @@ class ACEStepPipeline:
         save_path: str = None,
         batch_size: int = 1,
         debug: bool = False,
+        progress=None,
     ):
 
         start_time = time.time()
+        if progress:
+            progress(0, desc="Starting...")
 
         if audio2audio_enable and ref_audio_input is not None:
             task = "audio2audio"
@@ -1622,6 +1631,7 @@ class ACEStepPipeline:
                 n_max=edit_n_max,
                 n_avg=edit_n_avg,
                 scheduler_type=scheduler_type,
+                progress=progress,
             )
         else:
             target_latents = self.text2music_diffusion_process(
@@ -1655,6 +1665,7 @@ class ACEStepPipeline:
                 audio2audio_enable=audio2audio_enable,
                 ref_audio_strength=ref_audio_strength,
                 ref_latents=ref_latents,
+                progress=progress,
             )
 
         end_time = time.time()

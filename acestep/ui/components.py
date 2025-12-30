@@ -76,9 +76,10 @@ def create_output_ui(task_name="Text2Music"):
     # output_audio2 = gr.Audio(type="filepath", label="Generated Audio 2")
     with gr.Accordion(f"{task_name} Parameters", open=False):
         input_params_json = gr.JSON(label=f"{task_name} Parameters")
+    generation_status = gr.Markdown(value="Ready", label="Status")
     # outputs = [output_audio1, output_audio2]
     outputs = [output_audio1]
-    return outputs, input_params_json
+    return outputs, input_params_json, generation_status
 
 
 def dump_func(*args):
@@ -134,7 +135,7 @@ def create_text2music_ui(
                 )
                 lora_weight = gr.Number(value=1.0, label="Lora weight", step=0.1, maximum=3, minimum=-3)
 
-            ref_audio_input = gr.Audio(type="filepath", label="Reference Audio (for Audio2Audio)", visible=False, elem_id="ref_audio_input", show_download_button=True)
+            ref_audio_input = gr.Audio(type="filepath", label="Reference Audio (for Audio2Audio)", visible=False, elem_id="ref_audio_input")
             ref_audio_strength = gr.Slider(
                 label="Refer audio strength",
                 minimum=0.0,
@@ -312,7 +313,7 @@ def create_text2music_ui(
             text2music_bnt = gr.Button("Generate", variant="primary")
 
         with gr.Column():
-            outputs, input_params_json = create_output_ui()
+            outputs, input_params_json, generation_status = create_output_ui()
             with gr.Tab("retake"):
                 retake_variance = gr.Slider(
                     minimum=0.0, maximum=1.0, step=0.01, value=0.2, label="variance"
@@ -321,7 +322,7 @@ def create_text2music_ui(
                     label="retake seeds (default None)", placeholder="", value=None
                 )
                 retake_bnt = gr.Button("Retake", variant="primary")
-                retake_outputs, retake_input_params_json = create_output_ui("Retake")
+                retake_outputs, retake_input_params_json, _ = create_output_ui("Retake")
 
                 def retake_process_func(json_data, retake_variance, retake_seeds):
                     return text2music_process_func(
@@ -403,7 +404,6 @@ def create_text2music_ui(
                     type="filepath",
                     visible=False,
                     elem_id="repaint_source_audio_upload",
-                    show_download_button=True,
                 )
                 repaint_source.change(
                     fn=lambda x: gr.update(
@@ -414,7 +414,7 @@ def create_text2music_ui(
                 )
 
                 repaint_bnt = gr.Button("Repaint", variant="primary")
-                repaint_outputs, repaint_input_params_json = create_output_ui("Repaint")
+                repaint_outputs, repaint_input_params_json, _ = create_output_ui("Repaint")
 
                 def repaint_process_func(
                     text2music_json_data,
@@ -572,7 +572,6 @@ def create_text2music_ui(
                     type="filepath",
                     visible=False,
                     elem_id="edit_source_audio_upload",
-                    show_download_button=True,
                 )
                 edit_source.change(
                     fn=lambda x: gr.update(
@@ -583,7 +582,7 @@ def create_text2music_ui(
                 )
 
                 edit_bnt = gr.Button("Edit", variant="primary")
-                edit_outputs, edit_input_params_json = create_output_ui("Edit")
+                edit_outputs, edit_input_params_json, _ = create_output_ui("Edit")
 
                 def edit_process_func(
                     text2music_json_data,
@@ -724,7 +723,6 @@ def create_text2music_ui(
                     type="filepath",
                     visible=False,
                     elem_id="extend_source_audio_upload",
-                    show_download_button=True,
                 )
                 extend_source.change(
                     fn=lambda x: gr.update(
@@ -735,7 +733,7 @@ def create_text2music_ui(
                 )
 
                 extend_bnt = gr.Button("Extend", variant="primary")
-                extend_outputs, extend_input_params_json = create_output_ui("Extend")
+                extend_outputs, extend_input_params_json, _ = create_output_ui("Extend")
 
                 def extend_process_func(
                     text2music_json_data,
@@ -924,6 +922,8 @@ def create_text2music_ui(
         )
 
         def load_data(json_file):
+            if json_file is None:
+                return [gr.update() for _ in range(21)]
             if isinstance(output_file_dir, str):
                 json_file = os.path.join(output_file_dir, json_file)
             json_data = load_data_func(json_file)
@@ -957,8 +957,23 @@ def create_text2music_ui(
             ],
         )
 
+    def wrapped_text2music_process_func(*args, progress=gr.Progress()):
+        gr.Info("Generation started! This may take a minute...")
+        yield gr.skip(), gr.skip(), "Starting generation...", gr.Button(value="Generating...", interactive=False)
+        try:
+             # Run the actual generation
+             result_list = text2music_process_func(*args, progress=progress)
+             # result_list is expected to be [audio_path1, params_json] (since outputs was + [json])
+             # Actually outputs is list of audios.
+             # We need to yield strictly: [audio1, json, status, button]
+             # If result_list has multiple audios, we take what matches outputs.
+             # Assuming single audio for now based on outputs definition.
+             yield result_list[0], result_list[1], "Generation Complete!", gr.Button(value="Generate", interactive=True)
+        except Exception as e:
+             yield gr.skip(), gr.skip(), f"Error: {str(e)}", gr.Button(value="Generate", interactive=True)
+
     text2music_bnt.click(
-        fn=text2music_process_func,
+        fn=wrapped_text2music_process_func,
         inputs=[
             format,
             audio_duration,
@@ -985,7 +1000,7 @@ def create_text2music_ui(
             lora_name_or_path,
             lora_weight
         ],
-        outputs=outputs + [input_params_json],
+        outputs=outputs + [input_params_json, generation_status, text2music_bnt],
     )
 
 
