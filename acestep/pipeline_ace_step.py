@@ -10,6 +10,7 @@ import random
 import time
 import os
 import re
+import soundfile as sf
 
 import torch
 from loguru import logger
@@ -1403,9 +1404,19 @@ class ACEStepPipeline:
         if format == "ogg":
             backend = "sox"
         logger.info(f"Saving audio to {output_path_wav} using backend {backend}")
-        torchaudio.save(
-            output_path_wav, target_wav, sample_rate=sample_rate, format=format, backend=backend
-        )
+        
+        # Use soundfile directly to avoid torchaudio/torchcodec issues on Windows
+        try:
+            # target_wav is (Channels, Time), soundfile expects (Time, Channels)
+            audio_np = target_wav.squeeze().cpu().numpy()
+            if len(audio_np.shape) == 2:
+                audio_np = audio_np.T
+            sf.write(output_path_wav, audio_np, sample_rate)
+        except Exception as e:
+            logger.error(f"Failed to save with soundfile, falling back to torchaudio (which may fail): {e}")
+            torchaudio.save(
+                output_path_wav, target_wav, sample_rate=sample_rate, format=format, backend=backend
+            )
         return output_path_wav
 
     @cpu_offload("music_dcae")
@@ -1524,7 +1535,7 @@ class ACEStepPipeline:
         # 6 lyric
         lyric_token_idx = torch.tensor([0]).repeat(batch_size, 1).to(self.device).long()
         lyric_mask = torch.tensor([0]).repeat(batch_size, 1).to(self.device).long()
-        if len(lyrics) > 0:
+        if lyrics and len(lyrics) > 0:
             lyric_token_idx = self.tokenize_lyrics(lyrics, debug=debug)
             lyric_mask = [1] * len(lyric_token_idx)
             lyric_token_idx = (

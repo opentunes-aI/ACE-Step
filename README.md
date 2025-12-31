@@ -13,6 +13,24 @@
     <img src="./assets/orgnization_logos.png" width="100%" alt="StepFun Logo">
 </p>
 
+## 🎵 New: ACE-Step Studio Service
+We have migrated to a decoupled modern architecture (Next.js + FastAPI) to provide a premium user experience.
+
+### ✨ Studio Features
+*   **Console Drawer**: View real-time logs and generation progress (solved "silent failure" issues).
+*   **Waveform Visualizer**: Interactive audio player with waveform rendering.
+*   **Library Management**: History tracking with one-click playback.
+*   **Performance**: Optimized for 8GB VRAM cards via CPU offloading.
+
+### 🚀 How to Run
+1.  Double-click `run_studio.bat`.
+2.  Open **[http://localhost:7865](http://localhost:7865)**.
+3.  The API runs in the background at `http://localhost:8000`.
+
+*(Legacy Gradio app is still available via `run_acestep.bat`)*
+
+---
+
 ## Table of Contents
 
 - [✨ Features](#-features)
