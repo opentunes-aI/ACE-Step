@@ -80,14 +80,26 @@ graph LR
 3.  [x] **Console Drawer**: Real-time visualization of backend logs/status.
 4.  [x] **Audio Playback**: Waveform visualization and playback of generated files.
 
-### Phase 4: Advanced Features (Todo)
+### Phase 3.5: Feature Parity (Upgrades) - ✅ COMPLETED
+1.  [x] **Advanced Control Panel**: Ported settings from Gradio (Lyrics, Presets, CFG, Seeds).
+2.  [x] **API Expansion**: Support for Lyrics, Advanced Parameters, and Multi-format (MP3/FLAC) output.
+3.  [x] **State Management**: Robust Zustand store for form state.
+4.  [x] **Optimization**: Fixed Lyrics generation issues (`use_erg_lyric=False`).
+
+### Phase 4: Advanced Features (To-Do)
 1.  [ ] **Retake**: Implement variation generation logic.
 2.  [ ] **Repaint**: Add region selection tools to WaveformVisualizer.
 3.  [ ] **Extend**: Add out-painting controls.
 
 ## 6. Current Status
-The Studio is currently **Live and Functional**.
+The Studio is currently **Live and Functional (v1.0)**.
 - **Backend**: Running on `http://localhost:8000`.
 - **Frontend**: Running on `http://localhost:7865`.
-- **Features**: Basic T2M generation, 8GB GPU optimization, Real-time monitoring, Playback.
+- **Verified Features**: 
+    - Text-to-Music (with Presets & Lyrics)
+    - Audio Playback (WAV/MP3)
+    - Real-time Monitoring
+    - 8GB GPU Optimization
+
+
 

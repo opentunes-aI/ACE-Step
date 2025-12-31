@@ -36,11 +36,15 @@ logger = logging.getLogger("ace_step_api")
 
 class GenerationRequest(BaseModel):
     prompt: str
+    lyrics: Optional[str] = ""
     duration: float = Field(60.0, ge=10.0, le=240.0)
     infer_steps: int = Field(60, ge=10, le=200)
     guidance_scale: float = 15.0
     seed: Optional[int] = None
     format: str = "wav"
+    # Advanced
+    cfg_type: str = "apg"
+    scheduler_type: str = "euler"
 
 class JobStatus(BaseModel):
     job_id: str
@@ -164,11 +168,14 @@ async def process_jobs():
                 None, 
                 lambda: pipeline(
                     prompt=req.prompt,
-                    lyrics="", # Prevent len(None) error
+                    lyrics=req.lyrics or "", 
                     oss_steps="",
                     audio_duration=req.duration,
                     infer_step=req.infer_steps,
                     guidance_scale=req.guidance_scale,
+                    cfg_type=req.cfg_type,
+                    scheduler_type=req.scheduler_type,
+                    use_erg_lyric=False, # Match Gradio default for better vocals
                     manual_seeds=[req.seed] if req.seed is not None else None,
                     format=req.format,
                     progress=progress_callback
@@ -236,7 +243,7 @@ async def get_history():
     output_dir = os.getenv("ACE_OUTPUT_DIR", "./outputs")
     if not os.path.exists(output_dir):
         return []
-    files = [f for f in os.listdir(output_dir) if f.endswith(".wav")]
+    files = [f for f in os.listdir(output_dir) if f.lower().endswith((".wav", ".mp3", ".flac", ".ogg"))]
     files.sort(reverse=True) # newest first
     return {"files": files}
 

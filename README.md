@@ -19,7 +19,7 @@ We have migrated to a decoupled modern architecture (Next.js + FastAPI) to provi
 ### ✨ Studio Features
 *   **Console Drawer**: View real-time logs and generation progress (solved "silent failure" issues).
 *   **Waveform Visualizer**: Interactive audio player with waveform rendering.
-*   **Library Management**: History tracking with one-click playback.
+*   **Library Management**: History tracking with one-click playback (WAV, MP3, FLAC).
 *   **Performance**: Optimized for 8GB VRAM cards via CPU offloading.
 
 ### 🚀 How to Run

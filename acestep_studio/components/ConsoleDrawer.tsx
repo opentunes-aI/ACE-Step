@@ -69,14 +69,27 @@ export default function ConsoleDrawer({ activeJobId }: ConsoleDrawerProps) {
                     <Terminal className="w-4 h-4" />
                     <span>Console Output</span>
                     {status && (
-                        <span className={clsx("ml-2 px-2 py-0.5 rounded text-xs", {
-                            "bg-primary/20 text-primary": status.status === "processing",
-                            "bg-yellow-500/20 text-yellow-400": status.status === "queued",
-                            "bg-red-500/20 text-red-400": status.status === "failed",
-                            "bg-green-500/20 text-green-400": status.status === "completed",
-                        })}>
-                            {status.status.toUpperCase()}
-                        </span>
+                        <div className="flex items-center gap-2 ml-2">
+                            <span className={clsx("px-2 py-0.5 rounded text-xs", {
+                                "bg-primary/20 text-primary": status.status === "processing",
+                                "bg-yellow-500/20 text-yellow-400": status.status === "queued",
+                                "bg-red-500/20 text-red-400": status.status === "failed",
+                                "bg-green-500/20 text-green-400": status.status === "completed",
+                            })}>
+                                {status.status.toUpperCase()}
+                            </span>
+                            {status.status === 'processing' && (
+                                <div className="flex items-center gap-2">
+                                    <div className="w-24 h-1.5 bg-secondary rounded-full overflow-hidden">
+                                        <div
+                                            className="h-full bg-primary transition-all duration-300 ease-out"
+                                            style={{ width: `${Math.max(0, Math.min(100, (status.progress || 0) * 100))}%` }}
+                                        />
+                                    </div>
+                                    <span className="text-xs font-mono">{Math.round((status.progress || 0) * 100)}%</span>
+                                </div>
+                            )}
+                        </div>
                     )}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
