@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getHistory, getTrackMetadata, deleteLocalFile } from "@/utils/api";
-import { Music2, RefreshCw, FileAudio, Wand2, Database, Trash2 } from "lucide-react";
+import { Music2, RefreshCw, FileAudio, Wand2, Database, Trash2, Share2 } from "lucide-react";
 import { useStudioStore } from "@/utils/store";
 import { syncTrackToCloud, deleteCloudSong, supabase } from "@/utils/supabase";
 
@@ -81,6 +81,13 @@ export default function Sidebar() {
             await deleteCloudSong(song);
             load();
         } catch (err) { alert(err); }
+    }
+
+    function handleShare(e: React.MouseEvent, songId: string) {
+        e.stopPropagation();
+        const url = `${window.location.origin}/song/${songId}`;
+        navigator.clipboard.writeText(url);
+        alert(`Link copied: ${url}`);
     }
 
     return (
@@ -179,6 +186,13 @@ export default function Sidebar() {
                                     </div>
                                 </div>
                                 <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
+                                    <button
+                                        onClick={(e) => handleShare(e, song.id)}
+                                        title="Share Link"
+                                        className="p-1.5 bg-background border border-border rounded-md shadow hover:text-blue-500 hover:border-blue-500"
+                                    >
+                                        <Share2 className="w-3 h-3" />
+                                    </button>
                                     <button
                                         onClick={(e) => handleRemix(e, song.local_filename, song.meta)}
                                         title="Remix"

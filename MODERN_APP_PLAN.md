@@ -61,7 +61,7 @@ The core philosophy is **"No-Code Music"**: Users should not need to understand 
 
 - [ ] **Cloud Infrastructure**: Dockerize the app for GPU Instances.
 - [ ] **Credit System**: Stripe integration via Supabase Functions.
-- [ ] **Social Sharing**: Public profile pages.
+- [x] **Social Sharing**: Public song pages (`/song/[id]`) and easy link sharing.
 
 ---
 
