@@ -19,6 +19,8 @@ interface StudioState {
     retakeVariance: number;
     repaintStart: number | null;
     repaintEnd: number | null;
+    activeJobId: string | null;
+    isConsoleOpen: boolean;
 
     // Actions
     setPrompt: (v: string) => void;
@@ -30,6 +32,8 @@ interface StudioState {
     setCfgScale: (v: number) => void;
     setRetakeVariance: (v: number) => void;
     setRepaintRegion: (start: number | null, end: number | null) => void;
+    setActiveJobId: (id: string | null) => void;
+    setConsoleOpen: (v: boolean) => void;
 
     setAllParams: (params: Partial<Omit<StudioState, 'setCurrentTrack' | 'setAllParams' | 'currentTrackUrl' | 'currentTrackName'>>) => void;
 }
@@ -48,8 +52,15 @@ export const useStudioStore = create<StudioState>((set) => ({
     retakeVariance: 0.2,
     repaintStart: null,
     repaintEnd: null,
+    activeJobId: null,
+    isConsoleOpen: false,
 
-    setCurrentTrack: (url, name) => set({ currentTrackUrl: url, currentTrackName: name }),
+    setCurrentTrack: (url, name) => set({
+        currentTrackUrl: url,
+        currentTrackName: name,
+        repaintStart: null,
+        repaintEnd: null
+    }),
 
     setPrompt: (v) => set({ prompt: v }),
     setLyrics: (v) => set({ lyrics: v }),
@@ -60,6 +71,8 @@ export const useStudioStore = create<StudioState>((set) => ({
     setCfgScale: (v) => set({ cfgScale: v }),
     setRetakeVariance: (v) => set({ retakeVariance: v }),
     setRepaintRegion: (s, e) => set({ repaintStart: s, repaintEnd: e }),
+    setActiveJobId: (id) => set({ activeJobId: id, isConsoleOpen: true }),
+    setConsoleOpen: (v) => set({ isConsoleOpen: v }),
 
     setAllParams: (params) => set((state) => ({ ...state, ...params })),
 }));

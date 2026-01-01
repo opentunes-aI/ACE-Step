@@ -20,11 +20,7 @@ const GENRES: Record<string, string> = {
     "Chiptune": "8-bit, chiptune, nintendo style, retro, electronic, upbeat, catchy, synthesizer",
 };
 
-interface ControlPanelProps {
-    onJobCreated: (jobId: string) => void;
-}
-
-export default function ControlPanel({ onJobCreated }: ControlPanelProps) {
+export default function ControlPanel() {
     // Global State
     const {
         prompt, setPrompt,
@@ -35,7 +31,8 @@ export default function ControlPanel({ onJobCreated }: ControlPanelProps) {
         steps, setSteps,
         cfgScale, setCfgScale,
         retakeVariance, setRetakeVariance,
-        repaintStart, repaintEnd, setRepaintRegion
+        repaintStart, repaintEnd, setRepaintRegion,
+        setActiveJobId
     } = useStudioStore();
 
     const [loading, setLoading] = useState(false);
@@ -80,7 +77,7 @@ export default function ControlPanel({ onJobCreated }: ControlPanelProps) {
                 repaint_end: isRepaint ? repaintEnd! : undefined,
             };
             const job = await generateMusic(req);
-            onJobCreated(job.job_id);
+            setActiveJobId(job.job_id);
         } catch (e) {
             alert("Failed: " + e);
         } finally {

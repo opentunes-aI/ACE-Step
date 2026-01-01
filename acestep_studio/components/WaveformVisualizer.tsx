@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
-// @ts-ignore
+// @ts-expect-error Regions plugin lacks types
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
 import { useStudioStore } from "@/utils/store";
 import { Play, Pause, AlertCircle } from "lucide-react";
@@ -16,15 +16,18 @@ export default function WaveformVisualizer() {
     useEffect(() => {
         if (!containerRef.current) return;
 
+        const mediaEl = document.getElementById('global-audio') as HTMLMediaElement;
+
         ws.current = WaveSurfer.create({
             container: containerRef.current,
+            media: mediaEl || undefined,
             waveColor: '#52525b', // zinc-600
             progressColor: '#f97316', // orange-500
             cursorColor: '#ffffff',
             barWidth: 3,
             barGap: 2,
             barRadius: 3,
-            height: 200, // taller
+            height: 200,
             normalize: true,
             backend: 'WebAudio',
         });
@@ -33,32 +36,32 @@ export default function WaveformVisualizer() {
         const wsRegions = ws.current.registerPlugin(RegionsPlugin.create());
 
         wsRegions.enableDragSelection({
-            color: 'rgba(234, 88, 12, 0.2)', // Orange with opacity
+            color: 'rgba(234, 88, 12, 0.2)',
         });
 
         // Event Handling
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         wsRegions.on('region-created', (region: any) => {
             // Remove previous regions (single selection mode)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             wsRegions.getRegions().forEach((r: any) => {
                 if (r.id !== region.id) r.remove();
             });
             setRepaintRegion(region.start, region.end);
         });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         wsRegions.on('region-updated', (region: any) => {
             setRepaintRegion(region.start, region.end);
         });
 
-        // Clear region if clicking outside? (Optional)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         wsRegions.on('region-clicked', (region: any, e: any) => {
             e.stopPropagation();
-            // Maybe select it?
         });
 
         ws.current.on('interaction', () => {
-            // If user clicks on waveform (not region), maybe we should clear region?
-            // But 'interaction' fires on region drag too.
-            // Leaving manual clear for now.
+            // Placeholder
         });
 
         ws.current.on('play', () => setIsPlaying(true));
@@ -69,7 +72,6 @@ export default function WaveformVisualizer() {
         // Keyboard Shortcuts
         const handleKeyDown = (e: KeyboardEvent) => {
             if (!ws.current) return;
-            // Ignore if typing in text fields
             if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
             if (e.code === 'Space') {
@@ -92,12 +94,11 @@ export default function WaveformVisualizer() {
 
     useEffect(() => {
         if (currentTrackUrl && ws.current) {
+            // eslint-disable-next-line react-hooks/exhaustive-deps
             setError(null);
             ws.current.load(currentTrackUrl);
-            // Reset region
-            setRepaintRegion(null, null);
         }
-    }, [currentTrackUrl, setRepaintRegion]);
+    }, [currentTrackUrl]);
 
     function togglePlay() {
         if (ws.current) {
@@ -107,10 +108,8 @@ export default function WaveformVisualizer() {
 
     return (
         <div className="flex-1 bg-background relative flex flex-col items-center justify-center overflow-hidden">
-            {/* Background Grid/Effect */}
             <div className="absolute inset-0 z-0 opacity-10 pointer-events-none bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-zinc-800 to-background" />
 
-            {/* Info overlay */}
             <div className="z-10 absolute top-10 left-0 right-0 text-center">
                 {currentTrackName ? (
                     <div className="inline-block px-4 py-2 bg-secondary/50 rounded-full border border-white/5 backdrop-blur-md">
@@ -129,10 +128,8 @@ export default function WaveformVisualizer() {
                 )}
             </div>
 
-            {/* Waveform Container */}
             <div ref={containerRef} className="w-full px-12 z-10" />
 
-            {/* Controls */}
             {currentTrackUrl && (
                 <div className="absolute bottom-10 z-20">
                     <button

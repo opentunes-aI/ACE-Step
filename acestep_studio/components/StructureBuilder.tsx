@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Plus, X, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
+import { X, ChevronUp, ChevronDown } from "lucide-react";
 
 interface Block {
     id: string;
@@ -15,6 +15,8 @@ interface StructureBuilderProps {
 
 const SECTIONS = ["Verse", "Chorus", "Bridge", "Intro", "Outro", "Pre-Chorus", "Instrumental"];
 
+const generateId = () => typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2, 9);
+
 export default function StructureBuilder({ value, onChange }: StructureBuilderProps) {
     const [blocks, setBlocks] = useState<Block[]>([]);
     const isInternalUpdate = useRef(false);
@@ -27,9 +29,8 @@ export default function StructureBuilder({ value, onChange }: StructureBuilderPr
         }
 
         const parsed: Block[] = [];
-        const regex = /\[(.*?)\]([^\[]*)/g;
+        const regex = /\[(.*?)\]([^[]*)/g; // Fixed regex escaping
         let match;
-        let found = false;
 
         // Check for starting text without tag
         const firstBracket = value.indexOf('[');
@@ -41,9 +42,8 @@ export default function StructureBuilder({ value, onChange }: StructureBuilderPr
         }
 
         while ((match = regex.exec(value)) !== null) {
-            found = true;
             parsed.push({
-                id: Math.random().toString(36).substr(2, 9),
+                id: generateId(),
                 type: match[1], // e.g., 'verse'
                 content: match[2].trim()
             });
@@ -63,7 +63,7 @@ export default function StructureBuilder({ value, onChange }: StructureBuilderPr
     }
 
     function addBlock(type: string) {
-        const newBlocks = [...blocks, { id: Math.random().toString(36).substr(2, 9), type, content: "" }];
+        const newBlocks = [...blocks, { id: generateId(), type, content: "" }];
         setBlocks(newBlocks);
         updateParent(newBlocks);
     }
@@ -89,7 +89,7 @@ export default function StructureBuilder({ value, onChange }: StructureBuilderPr
         const newBlocks = [...blocks];
         newBlocks[index].content = text;
         setBlocks(newBlocks);
-        updateParent(newBlocks); // Sync on every keystroke might be heavy? React handles it fine.
+        updateParent(newBlocks);
     }
 
     return (

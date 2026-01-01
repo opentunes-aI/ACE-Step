@@ -1,4 +1,4 @@
-import { Music, LayoutGrid, DollarSign, User } from "lucide-react";
+import { Music } from "lucide-react";
 import AuthWidget from "./AuthWidget";
 
 export default function Header() {

@@ -1,10 +1,11 @@
 "use client";
 import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase";
-import { User, LogIn, Database, LogOut } from "lucide-react";
+import { LogIn, LogOut } from "lucide-react";
+import { User } from "@supabase/supabase-js";
 
 export default function AuthWidget() {
-    const [user, setUser] = useState<any>(null);
+    const [user, setUser] = useState<User | null>(null);
     const [loading, setLoading] = useState(false);
     const [showInput, setShowInput] = useState(false);
     const [email, setEmail] = useState("");

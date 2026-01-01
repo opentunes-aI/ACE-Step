@@ -49,6 +49,7 @@ The core philosophy is **"No-Code Music"**: Users should not need to understand 
 - [x] **Persistent Library**: Implemented "Local-First" library with Cloud Sync.
 - [x] **Cloud Storage**: Implemented MP3 Backup to Supabase Storage.
 - [x] **UI Layout**: Optimized layout (Controls Left, Library Right) for DAW-like workflow.
+- [x] **Persistent Player**: Implemented Global Audio Element and Footer Player architecture.
 - [x] **Shortcuts**: Implemented Space (Play/Pause) and Arrow (Seek) keys.
 
 

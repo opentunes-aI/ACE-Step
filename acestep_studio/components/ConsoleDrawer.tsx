@@ -4,22 +4,17 @@ import { JobStatus, getStatus } from "@/utils/api";
 import { Terminal, Minimize2, Maximize2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { clsx } from "clsx";
 import { syncTrackToCloud } from "@/utils/supabase";
+import { useStudioStore } from "@/utils/store";
 
-interface ConsoleDrawerProps {
-    activeJobId: string | null;
-    onClose?: () => void;
-}
-
-export default function ConsoleDrawer({ activeJobId }: ConsoleDrawerProps) {
-    const [isOpen, setIsOpen] = useState(false);
+export default function ConsoleDrawer() {
+    const { activeJobId, isConsoleOpen, setConsoleOpen } = useStudioStore();
     const [logs, setLogs] = useState<string[]>([]);
     const [status, setStatus] = useState<JobStatus | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
-    // Auto-open on new job
+    // Auto-poll on new job
     useEffect(() => {
         if (activeJobId) {
-            setIsOpen(true);
             setLogs([`Connecting to job ${activeJobId}...`]);
             setStatus(null);
 
@@ -39,8 +34,6 @@ export default function ConsoleDrawer({ activeJobId }: ConsoleDrawerProps) {
                         }
                         return prev;
                     });
-
-
 
                     if (s.status === "completed") {
                         if (s.result && s.result.length > 0) {
@@ -70,12 +63,12 @@ export default function ConsoleDrawer({ activeJobId }: ConsoleDrawerProps) {
     return (
         <div className={clsx(
             "fixed bottom-0 left-0 right-0 bg-card border-t border-border transition-all duration-300 ease-in-out shadow-2xl z-50 flex flex-col",
-            isOpen ? "h-64" : "h-10"
+            isConsoleOpen ? "h-64" : "h-10"
         )}>
             {/* Header */}
             <div
                 className="h-10 bg-secondary/50 flex items-center px-4 justify-between cursor-pointer hover:bg-secondary/80 transition-colors shrink-0"
-                onClick={() => setIsOpen(!isOpen)}
+                onClick={() => setConsoleOpen(!isConsoleOpen)}
             >
                 <div className="flex items-center gap-2 text-sm font-mono text-muted-foreground">
                     <Terminal className="w-4 h-4" />
@@ -105,7 +98,7 @@ export default function ConsoleDrawer({ activeJobId }: ConsoleDrawerProps) {
                     )}
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
-                    {isOpen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                    {isConsoleOpen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                 </div>
             </div>
 
