@@ -9,6 +9,15 @@ create table if not exists public.profiles (
   updated_at timestamp with time zone default now()
 );
 
+-- 1b. Backfill Profiles for existing users (Fix for FK Violation)
+insert into public.profiles (id, username, avatar_url)
+select 
+  id, 
+  coalesce(raw_user_meta_data->>'full_name', split_part(email, '@', 1)), 
+  raw_user_meta_data->>'avatar_url'
+from auth.users
+on conflict (id) do nothing;
+
 -- 2. Auto-create Profile on Signup
 create or replace function public.handle_new_user() 
 returns trigger as $$
