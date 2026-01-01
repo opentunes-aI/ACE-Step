@@ -1,20 +1,20 @@
 "use client";
 import { useEffect, useState } from "react";
-import { getHistory, getTrackMetadata } from "@/utils/api";
-import { Music2, RefreshCw, FileAudio, Wand2, Database } from "lucide-react";
+import { getHistory, getTrackMetadata, deleteLocalFile } from "@/utils/api";
+import { Music2, RefreshCw, FileAudio, Wand2, Database, Trash2 } from "lucide-react";
 import { useStudioStore } from "@/utils/store";
-import { syncTrackToCloud, supabase } from "@/utils/supabase";
+import { syncTrackToCloud, deleteCloudSong, supabase } from "@/utils/supabase";
 
 export default function Sidebar() {
     const [tab, setTab] = useState<'local' | 'cloud'>('local');
-    const [files, setFiles] = useState<string[]>([]); // Local files
+    const [files, setFiles] = useState<string[]>([]);
     const [cloudSongs, setCloudSongs] = useState<any[]>([]); // Cloud rows
     const [loading, setLoading] = useState(false);
 
     // Store Actions
     const setCurrentTrack = useStudioStore(s => s.setCurrentTrack);
-    const currentTrackName = useStudioStore(s => s.currentTrackName);
     const setAllParams = useStudioStore(s => s.setAllParams);
+    const currentTrackName = useStudioStore(s => s.currentTrackName);
 
     async function load() {
         setLoading(true);
@@ -44,7 +44,7 @@ export default function Sidebar() {
 
         let meta: any = null;
         if (cloudMeta) {
-            meta = cloudMeta; // Use stored meta from DB
+            meta = cloudMeta;
         } else {
             meta = await getTrackMetadata(filename);
         }
@@ -63,6 +63,24 @@ export default function Sidebar() {
         } else {
             alert(`Metadata not found. Cannot remix.`);
         }
+    }
+
+    async function handleDeleteLocal(e: React.MouseEvent, filename: string) {
+        e.stopPropagation();
+        if (!confirm(`Delete "${filename}" permanently? This cannot be undone.`)) return;
+        try {
+            await deleteLocalFile(filename);
+            load();
+        } catch (err) { alert(err); }
+    }
+
+    async function handleDeleteCloud(e: React.MouseEvent, song: any) {
+        e.stopPropagation();
+        if (!confirm(`Delete "${song.title}" from Cloud Library?`)) return;
+        try {
+            await deleteCloudSong(song);
+            load();
+        } catch (err) { alert(err); }
     }
 
     return (
@@ -128,6 +146,13 @@ export default function Sidebar() {
                                     >
                                         <Wand2 className="w-3 h-3" />
                                     </button>
+                                    <button
+                                        onClick={(e) => handleDeleteLocal(e, f)}
+                                        title="Delete"
+                                        className="p-1.5 bg-background border border-border rounded-md shadow hover:text-red-500 hover:border-red-500"
+                                    >
+                                        <Trash2 className="w-3 h-3" />
+                                    </button>
                                 </div>
                             </div>
                         );
@@ -135,7 +160,6 @@ export default function Sidebar() {
                 ) : (
                     cloudSongs.map(song => {
                         const isActive = currentTrackName === song.local_filename;
-                        // Note: Playback relies on local file existence for now
                         return (
                             <div
                                 key={song.id}
@@ -154,13 +178,20 @@ export default function Sidebar() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                                     <button
                                         onClick={(e) => handleRemix(e, song.local_filename, song.meta)}
                                         title="Remix"
                                         className="p-1.5 bg-background border border-border rounded-md shadow hover:text-primary hover:border-primary"
                                     >
                                         <Wand2 className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                        onClick={(e) => handleDeleteCloud(e, song)}
+                                        title="Delete"
+                                        className="p-1.5 bg-background border border-border rounded-md shadow hover:text-red-500 hover:border-red-500"
+                                    >
+                                        <Trash2 className="w-3 h-3" />
                                     </button>
                                 </div>
                             </div>

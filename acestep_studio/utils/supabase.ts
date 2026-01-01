@@ -66,3 +66,24 @@ export async function syncTrackToCloud(filename: string) {
         console.error("Sync Exception:", e);
     }
 }
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export async function deleteCloudSong(song: any) {
+    if (!supabase) return;
+    try {
+        console.log("Deleting cloud song:", song.id);
+        // Delete from DB
+        const { error } = await supabase.from('songs').delete().eq('id', song.id);
+        if (error) throw error;
+
+        // Delete from Storage
+        if (song.local_filename && song.user_id) {
+            const path = `${song.user_id}/${song.local_filename}`;
+            const { error: storageError } = await supabase.storage.from('music').remove([path]);
+            if (storageError) console.warn("Storage delete failed:", storageError);
+        }
+    } catch (e) {
+        console.error("Delete Failed:", e);
+        throw e;
+    }
+}

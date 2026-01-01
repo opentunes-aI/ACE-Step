@@ -313,3 +313,32 @@ async def health():
     except:
         pass
     return {"status": "healthy", "model_ready": ready}
+
+@app.delete("/files/{filename}")
+async def delete_file(filename: str):
+    """Delete a generated file and its associated metadata."""
+    output_dir = os.getenv("ACE_OUTPUT_DIR", "./outputs")
+    
+    # Security: basic path traversal prevention
+    if ".." in filename or "/" in filename or "\\" in filename:
+         raise HTTPException(status_code=400, detail="Invalid filename")
+
+    file_path = os.path.join(output_dir, filename)
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
+        
+    try:
+        os.remove(file_path)
+        
+        # Try to remove associated json if exists (e.g. filename.json or filename minus ext .json)
+        # Assuming filename is "xyz.wav"
+        base_name = os.path.splitext(filename)[0]
+        json_path = os.path.join(output_dir, base_name + ".json")
+        if os.path.exists(json_path):
+            os.remove(json_path)
+            
+        return {"status": "deleted", "file": filename}
+    except Exception as e:
+        logger.error(f"Failed to delete {filename}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

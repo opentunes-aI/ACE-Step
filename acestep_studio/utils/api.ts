@@ -63,6 +63,13 @@ export async function getTrackMetadata(filename: string): Promise<GenerationRequ
     }
 }
 
+export async function deleteLocalFile(filename: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/files/${filename}`, {
+        method: "DELETE",
+    });
+    if (!res.ok) throw new Error("Failed to delete file");
+}
+
 // Ollama Integration
 export async function getLLMModels(): Promise<string[]> {
     try {
