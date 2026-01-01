@@ -1,4 +1,5 @@
 import { Music } from "lucide-react";
+import Link from "next/link";
 import AuthWidget from "./AuthWidget";
 
 export default function Header() {
@@ -14,8 +15,8 @@ export default function Header() {
             </div>
 
             <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
-                <a href="#" className="text-foreground hover:text-primary transition-colors">Studio</a>
-                <a href="#" className="hover:text-foreground transition-colors">Explore</a>
+                <Link href="/" className="text-foreground hover:text-primary transition-colors">Studio</Link>
+                <Link href="/explore" className="hover:text-foreground transition-colors">Explore</Link>
                 <a href="#" className="hover:text-foreground transition-colors">Pricing</a>
                 <a href="#" className="hover:text-foreground transition-colors">Docs</a>
             </nav>
