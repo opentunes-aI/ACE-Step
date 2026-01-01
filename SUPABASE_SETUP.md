@@ -56,5 +56,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-## (Advanced) Database Setup
-Later in Horizon 3, we will set up the database tables. For now, Authentication is sufficient to identify you as a user.
+## (Advanced) Database & Storage Setup
+Later in Horizon 3, we will set up the database.
+
+### Enable Cloud Storage (For MP3 Backup)
+1.  Go to **Storage** in Supabase Dashboard.
+2.  Create a new Bucket named `music`.
+3.  Make it **Public**.
+4.  (Or run the SQL in `supabase_schema.sql`).

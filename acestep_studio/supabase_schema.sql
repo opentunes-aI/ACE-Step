@@ -35,6 +35,7 @@ on public.songs for delete
 using (auth.uid() = user_id);
 
 -- 4. Create Storage Bucket (Optional - IF you want cloud backup)
--- insert into storage.buckets (id, name, public) values ('music', 'music', true);
--- create policy "Storage Public Access" on storage.objects for select using ( bucket_id = 'music' );
--- create policy "Storage User Upload" on storage.objects for insert with check ( bucket_id = 'music' and auth.uid() = owner );
+-- 4. Create Storage Bucket (required for MP3 backup)
+insert into storage.buckets (id, name, public) values ('music', 'music', true);
+create policy "Storage Public Access" on storage.objects for select using ( bucket_id = 'music' );
+create policy "Storage User Upload" on storage.objects for insert with check ( bucket_id = 'music' and auth.uid() = owner );
