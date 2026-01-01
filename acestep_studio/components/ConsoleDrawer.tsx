@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { JobStatus, getStatus } from "@/utils/api";
 import { Terminal, Minimize2, Maximize2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { clsx } from "clsx";
+import { syncTrackToCloud } from "@/utils/supabase";
 
 interface ConsoleDrawerProps {
     activeJobId: string | null;
@@ -38,6 +39,17 @@ export default function ConsoleDrawer({ activeJobId }: ConsoleDrawerProps) {
                         }
                         return prev;
                     });
+
+
+
+                    if (s.status === "completed") {
+                        if (s.result && s.result.length > 0) {
+                            setLogs(prev => [...prev, "Syncing metadata to cloud..."]);
+                            syncTrackToCloud(s.result[0]).then(() => {
+                                setLogs(prev => [...prev, "Cloud Sync: OK"]);
+                            });
+                        }
+                    }
 
                     if (s.status === "completed" || s.status === "failed") {
                         if (intervalRef.current) clearInterval(intervalRef.current);

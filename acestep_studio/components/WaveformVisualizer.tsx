@@ -1,13 +1,15 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import WaveSurfer from "wavesurfer.js";
+// @ts-ignore
+import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.esm.js';
 import { useStudioStore } from "@/utils/store";
 import { Play, Pause, AlertCircle } from "lucide-react";
 
 export default function WaveformVisualizer() {
     const containerRef = useRef<HTMLDivElement>(null);
     const ws = useRef<WaveSurfer | null>(null);
-    const { currentTrackUrl, currentTrackName } = useStudioStore();
+    const { currentTrackUrl, currentTrackName, setRepaintRegion } = useStudioStore();
     const [isPlaying, setIsPlaying] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
@@ -27,22 +29,75 @@ export default function WaveformVisualizer() {
             backend: 'WebAudio',
         });
 
+        // Initialize Regions
+        const wsRegions = ws.current.registerPlugin(RegionsPlugin.create());
+
+        wsRegions.enableDragSelection({
+            color: 'rgba(234, 88, 12, 0.2)', // Orange with opacity
+        });
+
+        // Event Handling
+        wsRegions.on('region-created', (region: any) => {
+            // Remove previous regions (single selection mode)
+            wsRegions.getRegions().forEach((r: any) => {
+                if (r.id !== region.id) r.remove();
+            });
+            setRepaintRegion(region.start, region.end);
+        });
+
+        wsRegions.on('region-updated', (region: any) => {
+            setRepaintRegion(region.start, region.end);
+        });
+
+        // Clear region if clicking outside? (Optional)
+        wsRegions.on('region-clicked', (region: any, e: any) => {
+            e.stopPropagation();
+            // Maybe select it?
+        });
+
+        ws.current.on('interaction', () => {
+            // If user clicks on waveform (not region), maybe we should clear region?
+            // But 'interaction' fires on region drag too.
+            // Leaving manual clear for now.
+        });
+
         ws.current.on('play', () => setIsPlaying(true));
         ws.current.on('pause', () => setIsPlaying(false));
         ws.current.on('finish', () => setIsPlaying(false));
         ws.current.on('error', (e) => setError(e.toString()));
 
+        // Keyboard Shortcuts
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (!ws.current) return;
+            // Ignore if typing in text fields
+            if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+            if (e.code === 'Space') {
+                e.preventDefault();
+                ws.current.playPause();
+            } else if (e.code === 'ArrowLeft') {
+                ws.current.skip(-5);
+            } else if (e.code === 'ArrowRight') {
+                ws.current.skip(5);
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+
         return () => {
+            window.removeEventListener('keydown', handleKeyDown);
             ws.current?.destroy();
         }
-    }, []);
+    }, [setRepaintRegion]);
 
     useEffect(() => {
         if (currentTrackUrl && ws.current) {
             setError(null);
             ws.current.load(currentTrackUrl);
+            // Reset region
+            setRepaintRegion(null, null);
         }
-    }, [currentTrackUrl]);
+    }, [currentTrackUrl, setRepaintRegion]);
 
     function togglePlay() {
         if (ws.current) {

@@ -1,36 +1,46 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Opentunes Studio (Frontend)
 
-## Getting Started
+This is the commercial-grade frontend for **Opentunes.ai** (formerly ACE-Step).
+Built with **Next.js 14**, **Tailwind CSS**, **Zustand**, and **Supabase**.
 
-First, run the development server:
+## 🛠️ Setup
+
+### 1. Environment Variables
+Copy the `.env.local.example` (or `env.local`) to `.env.local` and fill in your Supabase keys:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+If you don't have Supabase keys, the app will run in **Local Mode** (Authentication features disabled).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 2. Install Dependencies
+```bash
+npm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Run Development Server
+```bash
+npm run dev
+```
 
-## Learn More
+Open [http://localhost:7865](http://localhost:7865).
 
-To learn more about Next.js, take a look at the following resources:
+## 🏗️ Architecture
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+*   **`components/`**: UI Building blocks (ControlPanel, WaveformVisualizer, Sidebar).
+*   **`utils/api.ts`**: Client for the Python Backend (`localhost:8000`).
+*   **`utils/supabase.ts`**: Supabase Client instance.
+*   **`utils/store.ts`**: Zustand Global State (Prompt, Parameters, current track).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🎵 Key Features
 
-## Deploy on Vercel
+*   **Waveform Visualization**: Uses `wavesurfer.js` for interactive regions.
+*   **Real-time Console**: Polls the backend for generation logs.
+*   **Cloud Sync**: Hybrid "Local-First" architecture. Files stay on disk; metadata syncs to Supabase.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🤝 Contributing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This project uses `lucide-react` for icons and standard Tailwind utility classes.
+Please ensure all new components are responsive and follow the dark-mode aesthetic.

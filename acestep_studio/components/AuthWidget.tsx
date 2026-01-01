@@ -1,0 +1,113 @@
+"use client";
+import { useState, useEffect } from "react";
+import { supabase } from "@/utils/supabase";
+import { User, LogIn, Database, LogOut } from "lucide-react";
+
+export default function AuthWidget() {
+    const [user, setUser] = useState<any>(null);
+    const [loading, setLoading] = useState(false);
+    const [showInput, setShowInput] = useState(false);
+    const [email, setEmail] = useState("");
+
+    useEffect(() => {
+        if (!supabase) return;
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user || null);
+        });
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            setUser(session?.user || null);
+        });
+        return () => subscription.unsubscribe();
+    }, []);
+
+    async function handleLogin() {
+        console.log("[Auth] Starting login for:", email);
+        if (!supabase || !email) {
+            console.error("[Auth] Missing dependencies");
+            return;
+        }
+        setLoading(true);
+        try {
+            console.log("[Auth] Calling Supabase API...");
+            const { error } = await supabase.auth.signInWithOtp({
+                email,
+                options: { emailRedirectTo: window.location.origin }
+            });
+            console.log("[Auth] API Response:", error);
+
+            if (error) {
+                alert("Supabase Error: " + error.message);
+            } else {
+                alert(`Check ${email} for the login link!`);
+                setShowInput(false);
+            }
+        } catch (e) {
+            console.error("[Auth] Exception:", e);
+            alert("Unexpected error: " + e);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    async function handleLogout() {
+        if (!supabase) return;
+        await supabase.auth.signOut();
+    }
+
+    if (!supabase) {
+        return (
+            <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse"></div>
+                <span className="text-xs font-mono text-muted-foreground">Local Mode</span>
+            </div>
+        );
+    }
+
+    if (user) {
+        return (
+            <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/50 border border-border">
+                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
+                    <span className="text-xs font-medium truncate max-w-[100px]">{user.email}</span>
+                </div>
+                <button onClick={handleLogout} className="p-1.5 hover:bg-red-500/10 hover:text-red-500 rounded-full transition-colors" title="Logout">
+                    <LogOut className="w-4 h-4" />
+                </button>
+            </div>
+        );
+    }
+
+    if (showInput) {
+        return (
+            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4">
+                <input
+                    autoFocus
+                    className="h-8 rounded-full border border-border bg-secondary/50 px-3 text-xs w-48 focus:outline-none focus:ring-1 focus:ring-primary transition-all text-foreground"
+                    placeholder="name@example.com"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleLogin()}
+                    disabled={loading}
+                />
+                <button
+                    onClick={handleLogin}
+                    disabled={loading || !email}
+                    className="bg-primary text-primary-foreground h-8 w-8 rounded-full flex items-center justify-center hover:brightness-110 active:scale-90 transition-all font-bold disabled:opacity-50"
+                >
+                    {loading ? <span className="animate-spin text-xs">⌛</span> : "->"}
+                </button>
+                <button onClick={() => setShowInput(false)} className="text-muted-foreground hover:text-foreground p-1"><LogOut className="w-3 h-3 rotate-180" /></button>
+            </div>
+        );
+    }
+
+    return (
+        <button
+            onClick={() => setShowInput(true)}
+            className="flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary text-primary-foreground hover:brightness-110 font-bold text-xs transition-all shadow-sm active:scale-95"
+        >
+            <LogIn className="w-3 h-3" />
+            Sign In / Sync
+        </button>
+    );
+}

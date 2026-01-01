@@ -12,6 +12,7 @@ from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+import requests
 
 from acestep.api.dependencies import manager
 
@@ -45,6 +46,12 @@ class GenerationRequest(BaseModel):
     # Advanced
     cfg_type: str = "apg"
     scheduler_type: str = "euler"
+    # Horizon 2: Retake
+    retake_variance: float = 0.0
+    task: str = "text2music"
+    # Horizon 2: Repaint
+    repaint_start: Optional[float] = None
+    repaint_end: Optional[float] = None
 
 class JobStatus(BaseModel):
     job_id: str
@@ -178,7 +185,13 @@ async def process_jobs():
                     use_erg_lyric=False, # Match Gradio default for better vocals
                     manual_seeds=[req.seed] if req.seed is not None else None,
                     format=req.format,
-                    progress=progress_callback
+                    progress=progress_callback,
+                    # Retake params
+                    task=req.task,
+                    retake_variance=req.retake_variance,
+                    # Repaint params
+                    repaint_start=req.repaint_start,
+                    repaint_end=req.repaint_end
                 )
             )
             
@@ -208,6 +221,50 @@ async def process_jobs():
             TASK_QUEUE.task_done()
 
 # --- Endpoints ---
+
+class LyricsRequest(BaseModel):
+    topic: str
+    mood: str
+    language: str
+    model: str
+
+@app.get("/llm/models")
+async def get_llm_models():
+    """Fetch available models from local Ollama instance."""
+    try:
+        res = requests.get("http://localhost:11434/api/tags", timeout=5)
+        if res.status_code == 200:
+            data = res.json()
+            return {"models": [m["name"] for m in data.get("models", [])]}
+    except Exception as e:
+        logger.warning(f"Ollama connection failed: {e}")
+    return {"models": []}
+
+@app.post("/llm/generate_lyrics")
+async def generate_lyrics_endpoint(req: LyricsRequest):
+    prompt = (
+        f"Write song lyrics. \n"
+        f"Topic: {req.topic}\n"
+        f"Mood: {req.mood}\n"
+        f"Language: {req.language}\n"
+        f"Requirements: Use the structure [verse], [chorus], [bridge]. "
+        f"Output ONLY the lyrics. Do not add conversational text."
+    )
+    
+    try:
+        res = requests.post("http://localhost:11434/api/generate", json={
+            "model": req.model,
+            "prompt": prompt,
+            "stream": False
+        }, timeout=60)
+        
+        if res.status_code == 200:
+            return {"lyrics": res.json().get("response", "")}
+        else:
+            raise HTTPException(status_code=500, detail=f"Ollama API Error: {res.text}")
+            
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Failed to connect to Ollama: {str(e)}")
 
 @app.post("/generate", response_model=JobStatus)
 async def generate_music(req: GenerationRequest):

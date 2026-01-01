@@ -1,105 +1,76 @@
-# Modern Web App Migration Plan for ACE-Step
+# Opentunes.ai: Product Roadmap to Commercialization
 
-## 1. Executive Summary
-To address the limitations of the current Gradio interface—specifically the lack of robust failure monitoring, granular progress feedback, and modern UI/UX—we propose migrating to a decoupled client-server architecture. This will enable advanced error handling, real-time status streaming, and a premium "Text-to-Music" studio experience.
+## 1. Product Vision: "Suno for Localhost"
+Our goal is to transform ACE-Step from a technical research demo into a commercial-grade, fee-based SaaS platform called **Opentunes.ai**.
+The core philosophy is **"No-Code Music"**: Users should not need to understand "CFG Scale" or "Inference Steps". They should simply describe an emotion and get a radio-ready track.
 
-## 2. Component Analysis & Migration Strategy
+### Target Architecture (Commercial)
+*   **Landing Page**: `opentunes.ai` (Marketing, Pricing).
+*   **App URL**: `app.opentunes.ai` (The Studio).
+*   **Frontend Hosting**: Cloudflare Pages / Vercel (Next.js).
+*   **Backend Hosting**: GPU Cloud (RunPod / Railway / AWS) running Dockerized FastAPI.
+*   **Database/Auth**: **Supabase** (PostgreSQL + Auth + Realtime).
 
-We have analyzed the existing Gradio application (`acestep/ui/components.py`) and established the following mapping for the new architecture:
+---
 
-| Gradio Component | Purpose | New UX Implementation |
+## 2. Strategic Roadmap
+
+### Horizon 1: The Core Foundation (MVP) [✅ COMPLETED]
+*Goal: Prove the architecture works with robust error handling and basic generation.*
+- [x] **New Architecture**: Decoupled Next.js Frontend + FastAPI Backend.
+- [x] **Failure Monitoring**: Console Drawer for real-time logs (Fixed "Silent Failures").
+- [x] **Basic Studio API**: `/generate` endpoint with `soundfile` fix.
+- [x] **Optimization**: `cpu_offload` for 8GB Consumer GPUs.
+- [x] **Audio Playback**: Waveform visualizer (Wavesurfer.js) with Play/Pause.
+- [x] **Feature Parity**: Ported Lyrics, Presets, Formats, and Advanced Param controls.
+- [x] **Smart Lyrics**: Integrated Local Ollama for "Magic Lyrics".
+
+---
+
+### Horizon 2: The "Creator Studio" (Feature Completeness) [✅ COMPLETED]
+*Goal: Match the creative workflows of Suno/Udio. Move beyond "One-shot" generation.*
+
+- [x] **Branding**: Implemented Header/Footer for "Opentunes" commercial look.
+- [x] **Variations (Retake)**: Implemented "Remix Strength" slider and Sidebar integration.
+- [x] **In-Painting (Repaint)**: Implemented Waveform Region Selection + Repaint logic.
+- [ ] **Out-Painting (Extend)**: (Deferred to Horizon 3).
+
+#### B. UX for Non-Musicians
+- [x] **Structure Builder**: Implemented Visual Block Builder with bi-directional sync (Text <-> Visual).
+- [x] **Curated Style Chips**: Implemented visual Presets Grid with 12+ genres.
+
+---
+
+### Horizon 3: The "Platform" (Engagement & Library) [🚧 ACTIVE]
+*Goal: Increase user stickiness. Migration to Supabase.*
+
+- [x] **Supabase Integration**: Set up Client, Auth Widget, and `.env` config.
+- [x] **Database Setup**: Schema created and verified.
+- [x] **Persistent Library**: Implemented "Local-First" library with Cloud Sync.
+- [x] **Shortcuts**: Implemented Space (Play/Pause) and Arrow (Seek) keys.
+
+---
+
+### Horizon 4: Commercialization (SaaS Transformation)
+*Goal: Prepare for deployment and monetization.*
+
+- [ ] **Cloud Infrastructure**: Dockerize the app for GPU Instances.
+- [ ] **Credit System**: Stripe integration via Supabase Functions.
+- [ ] **Social Sharing**: Public profile pages.
+
+---
+
+## 3. Technology Stack (Final State)
+
+| Component | Technology | Reasoning |
 | :--- | :--- | :--- |
-| **Global Param Loader** | Loads JSON history | **Project Sidebar**: Specific "History" tab with rich cards (Audio Preview + Metadata) and "Remix" button. |
-| **Text2Music Tab** | Main generation interface | **Studio Canvas**: Large central waveform visualizer with a collapsable "Generation Panel" on the right. |
-| **Output Audio** | Simple HTML5 player | **Waveform Visualizer**: (`wavesurfer.js`) Interactive, allowing drag-to-select for repainting regions. |
-| **Retake Tab** | Variations of previous track | **Variant Tree**: Instead of a separate tab, view "Alternative Takes" nested under the original track in the History. |
-| **Repainting Tab** | In-painting time segments | **Direct Manipulation**: Drag a box on the main visualizer timeline to define start/end points, then click "Repaint Region". |
-| **Extend Tab** | Out-painting (intro/outro) | **Timeline Editor**: "Add Block" buttons before/after the waveform to visually expand the canvas. |
-| **Logs/Status** | Hidden terminal output | **Console Drawer**: A bottom-sheet console that streams real-time backend logs (stdout/stderr) via WebSockets. |
+| **Frontend** | Next.js 14 + Tailwind + Zustand | High performance, SEO, robust state. |
+| **Backend** | FastAPI + Celery/Redis | Async job processing essential for scale. |
+| **Compute** | **GPU Cloud** (RunPod/AWS) | ACE-Step Model Hosting (3.5B params). |
+| **Database** | **Supabase** (Postgres) | Auth, DB, Realtime all-in-one. |
+| **Storage** | **Supabase Storage** / S3 | Hosting audio files. |
 
-## 3. Technology Stack
-
-### Backend (API & Model Server)
-*   **Framework**: **FastAPI** (Python).
-    *   *Why*: High performance, native support for async (concurrency), and easy integration with the existing PyTorch/ACE-Step codebase.
-*   **Task Queue**: **Redis Queue (RQ)** or **Celery**.
-    *   *Why*: Decouples the long-running generation task (music synthesis) from the HTTP request. Prevents timeout issues and allows for job status polling/cancellation.
-*   **Protocol**: **WebSockets** (for real-time progress bars and log usage).
-
-### Frontend (User Interface)
-*   **Framework**: **Next.js** (React) with TypeScript.
-    *   *Why*: Industry standard for modern web apps, robust state management, and component reusability.
-*   **Styling**: **Tailwind CSS**.
-    *   *Why*: Rapid development of "Rich Aesthetic" designs (glassmorphism, animations) as requested.
-*   **State Management**: **Zustand** or **TanStack Query**.
-    *   *Why*: To handle the complex state of generation parameters (prompts, seeds, audio inputs) and server sync.
-
-## 3. Architecture Overview
-
-```mermaid
-graph LR
-    User[User Browser] -- HTTP/WebSocket --> NextJS[Next.js Frontend]
-    NextJS -- API Requests --> FastAPI[FastAPI Backend]
-    FastAPI -- Enqueue Job --> Redis[Task Queue]
-    Worker[ACE-Step System] -- Poll Job --> Redis
-    Worker -- Update Progress --> Redis
-    FastAPI -- Stream Progress --> User
-    Worker -- Save Audio --> FileSystem[Outputs Directory]
-```
-
-## 4. Key Features & Improvements
-
-### A. Advanced Failure Monitoring & Reporting
-*   **Real-time Log Stream**: The UI will have a collateral "Console/Logs" drawer that streams backend stdout/stderr in real-time via WebSockets.
-*   **Validation Layer**: Frontend will validate inputs (e.g., prompt length, file formats) before sending.
-*   **Health Checks**: The app will periodically check GPU health (VRAM usage) and disk space, warning the user *before* a crash occurs.
-*   **Structured Error Responses**: Instead of silent failures, the API will return precise error codes (e.g., `MODEL_LOAD_ERROR`, `AUDIO_SAVE_FAILED`) which the UI triggers into specific help modals.
-
-### B. Modern UI/UX implementation
-*   **Visualizer**: Replace standard HTML5 audio players with waveform visualizations (using `wavesurfer.js`) that show the audio structure.
-*   **Interactive History**: A proper "Gallery" sidebar instead of a simple dropdown, verifying file existence and showing metadata previews.
-*   **Non-blocking Interface**: You can browse parameters or previous generations while a new one is processing in the background.
-
-## 5. Development Roadmap (Status: ✅ Active Beta)
-
-### Phase 1: API Foundation (Backend) - ✅ COMPLETED
-1.  [x] Set up FastAPI project structure in `acestep/api`.
-2.  [x] Wrap `ACEStepPipeline` in a singleton dependency.
-3.  [x] Create endpoints: `/generate`, `/status/{job_id}`, `/history`, `/outputs`.
-4.  [x] Implement `soundfile` saving logic for reliability.
-5.  [x] **Optimization**: Implemented `cpu_offload` to support 8GB VRAM GPUs.
-
-### Phase 2: Frontend Skeleton (Frontend) - ✅ COMPLETED
-1.  [x] Initialize Next.js project.
-2.  [x] Implement "Rich Aesthetics" design system (Dark Mode Studio).
-3.  [x] Build the "Studio" layout (Sidebar, Control Panel, Console Drawer).
-
-### Phase 3: Integration & Monitoring - ✅ COMPLETED
-1.  [x] Connect Frontend to API (CORS, Proxy).
-2.  [x] Implement Polling-based progress tracking (Alternative to WebSocket).
-3.  [x] **Console Drawer**: Real-time visualization of backend logs/status.
-4.  [x] **Audio Playback**: Waveform visualization and playback of generated files.
-
-### Phase 3.5: Feature Parity (Upgrades) - ✅ COMPLETED
-1.  [x] **Advanced Control Panel**: Ported settings from Gradio (Lyrics, Presets, CFG, Seeds).
-2.  [x] **API Expansion**: Support for Lyrics, Advanced Parameters, and Multi-format (MP3/FLAC) output.
-3.  [x] **State Management**: Robust Zustand store for form state.
-4.  [x] **Optimization**: Fixed Lyrics generation issues (`use_erg_lyric=False`).
-
-### Phase 4: Advanced Features (To-Do)
-1.  [ ] **Retake**: Implement variation generation logic.
-2.  [ ] **Repaint**: Add region selection tools to WaveformVisualizer.
-3.  [ ] **Extend**: Add out-painting controls.
-
-## 6. Current Status
-The Studio is currently **Live and Functional (v1.0)**.
-- **Backend**: Running on `http://localhost:8000`.
-- **Frontend**: Running on `http://localhost:7865`.
-- **Verified Features**: 
-    - Text-to-Music (with Presets & Lyrics)
-    - Audio Playback (WAV/MP3)
-    - Real-time Monitoring
-    - 8GB GPU Optimization
-
-
-
+## 4. Immediate Next Steps (Horizon 2)
+1.  Implement **Branding**.
+2.  Implement **Variations (Retake)** logic.
+3.  Implement **Region Selection** for Repainting.

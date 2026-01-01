@@ -4,6 +4,8 @@ import Sidebar from "@/components/Sidebar";
 import ControlPanel from "@/components/ControlPanel";
 import WaveformVisualizer from "@/components/WaveformVisualizer";
 import ConsoleDrawer from "@/components/ConsoleDrawer";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
@@ -14,16 +16,19 @@ export default function Home() {
   }
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground antialiased selection:bg-primary/30">
-      <Sidebar />
-      <div className="flex-1 flex flex-col relative">
-        {/* Header Bar could go here */}
-        <WaveformVisualizer />
-      </div>
-      <ControlPanel onJobCreated={handleJobCreated} />
+    <div className="flex flex-col h-screen w-screen overflow-hidden bg-background text-foreground antialiased selection:bg-primary/30">
+      <Header />
+      <div className="flex-1 flex overflow-hidden relative">
+        <Sidebar />
+        <div className="flex-1 flex flex-col relative min-w-0">
+          <WaveformVisualizer />
+        </div>
+        <ControlPanel onJobCreated={handleJobCreated} />
 
-      {/* Drawer sits on top */}
-      <ConsoleDrawer activeJobId={activeJobId} />
+        {/* Drawer sits on top of everything in the main area, or fixed to window */}
+        <ConsoleDrawer activeJobId={activeJobId} />
+      </div>
+      <Footer />
     </div>
   );
 }
