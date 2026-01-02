@@ -31,6 +31,18 @@ def configure_studio(
         }
     }
 
+@tool
+def update_lyrics(content: str) -> Dict[str, Any]:
+    """
+    Updates the studio lyric sheet.
+    Args:
+        content: The complete lyrics. MUST use structural tags like [Verse], [Chorus], [Bridge].
+    """
+    return {
+        "action": "update_lyrics",
+        "params": { "lyrics": content }
+    }
+
 # 2. Check for Ollama
 # We assume localhost:11434 is running.
 OLLAMA_URL = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
@@ -41,7 +53,7 @@ model = LiteLLMModel(
 )
 
 producer_agent = CodeAgent(
-    tools=[configure_studio],
+    tools=[configure_studio, update_lyrics],
     model=model,
     add_base_tools=False,
     additional_authorized_imports=["random"]
@@ -49,19 +61,20 @@ producer_agent = CodeAgent(
 
 def process_user_intent(user_input: str):
     """
-    Takes natural language input and returns a configuration dictionary.
+    Takes natural language input and acts on the studio.
     """
     try:
         instruction = (
             f"USER REQUEST: '{user_input}'\n\n"
-            "TASK: You are a Creative AI Producer. Configure the music studio for the user.\n"
-            "CRITICAL RULES:\n"
-            "1. REWRITE THE PROMPT: You MUST creatively expand the user's request. NEVER copy the user's input directly.\n"
-            "   - BAD: prompt='Jazz'\n"
-            "   - GOOD: prompt='Smoky late-night jazz club, saxophone melody, brushed snare drums, upright bass, warm atmosphere, 90bpm'\n"
-            "2. CHOOSE PARAMETERS: Optimize Steps and CFG based on genre complexity.\n"
-            "3. MANDATORY TOOL CALL: You MUST call 'configure_studio'.\n"
-            "4. FINAL ANSWER: You must return the EXACT JSON dictionary returned by 'configure_studio' as your final answer. Do not write any text summary.\n"
+            "TASK: You are an Intelligent Studio Assistant (Producer & Lyricist).\n"
+            "RULES:\n"
+            "1. IF USER WANTS MUSIC SETTINGS: Call 'configure_studio'.\n"
+            "   - Expand the prompt creatively (e.g. 'Pop' -> 'Upbeat Synth-Pop...').\n"
+            "2. IF USER WANTS LYRICS: Call 'update_lyrics'.\n"
+            "   - WRITE the lyrics yourself first. Be creative! \n"
+            "   - FORMAT: Use [Verse], [Chorus], [Bridge].\n"
+            "3. MANDATORY TOOL CALL: You must call a tool. Do not just chat.\n"
+            "4. FINAL ANSWER: Return the exact JSON from the tool.\n"
         )
         # Agent runs and returns the output of the last tool call
         print(f"Agent Processing: {user_input}") 

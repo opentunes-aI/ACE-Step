@@ -12,7 +12,8 @@ export default function AgentChat() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     // Store setters
-    const { setPrompt, setSteps, setCfgScale, setDuration, setSeed } = useStudioStore();
+    // Store setters
+    const { setPrompt, setSteps, setCfgScale, setDuration, setSeed, setLyrics } = useStudioStore();
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -38,7 +39,7 @@ export default function AgentChat() {
             // The agent might return a string, or our structured object
             let replyContent = "I've processed that.";
 
-            if (data?.action === 'configure' || (data?.params)) {
+            if (data?.action === 'configure' || (data?.params && data.params.prompt)) {
                 // Handle direct return or wrapped return
                 const p = data.params || data;
 
@@ -49,6 +50,10 @@ export default function AgentChat() {
                 if (p.seed) setSeed(p.seed);
 
                 replyContent = `I've configured the studio:\nPrompt: "${p.prompt}"\nSteps: ${p.steps}, CFG: ${p.cfg_scale}`;
+            } else if (data?.action === 'update_lyrics') {
+                const lyrics = data.params.lyrics;
+                setLyrics(lyrics);
+                replyContent = `I've written lyrics for you! check the lyrics tab.`;
             } else if (data?.fallback) {
                 replyContent = "I encountered a glitch but set the prompt for you.";
                 setPrompt(data.fallback.prompt);
