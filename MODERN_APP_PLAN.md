@@ -25,13 +25,13 @@ The user directs the session, and the **AI Producer Agent** handles the complexi
 - [x] **Visual Polish**: Dynamic Gradients and Genre Icons.
 - [x] **Library Management**: Cloud/Local sync and file deletion.
 
-### Horizon 3: The "Agentic Layer" (Intelligent Workflow) [🚀 NEXT UP]
+### Horizon 3: The "Agentic Layer" (Intelligent Workflow) [🚀 ACTIVE]
 *Goal: Implement the "AI Producer" to abstract complexity.*
 
-#### Phase 3.1: The Parameter Agent (Backend)
-- [ ] **Infrastructure**: Integrate `smolagents` or `langchain` with local Ollama (Llama 3).
-- [ ] **Text-to-Config**: "Make it punchier" -> Agent sets `cfg_scale=20`, `steps=64`.
-- [ ] **Param-Bot**: A chat interface to modify the current track state via natural language.
+#### Phase 3.1: The Parameter Agent (Backend) [✅ COMPLETED]
+- [x] **Infrastructure**: Integrated `smolagents` with local Ollama (`qwen2.5`).
+- [x] **Text-to-Config**: "Make it punchier" -> Agent sets paramaters via Tool Calling.
+- [x] **Param-Bot**: Floating Chat Interface implemented.
 
 #### Phase 3.2: Multi-Agent Collaboration
 - [ ] **The Lyricist**: Specialized agent for structure-aware songwriting (Verse/Chorus rules).
