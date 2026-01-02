@@ -59,11 +59,18 @@ producer_agent = CodeAgent(
     additional_authorized_imports=["random"]
 )
 
+critic_agent = CodeAgent(
+    tools=[],
+    model=model,
+    add_base_tools=False
+)
+
 def process_user_intent(user_input: str):
     """
-    Takes natural language input and acts on the studio.
+    Orchestrates the Producer and Critic agents.
     """
     try:
+        # 1. PRODUCER PHASE
         instruction = (
             f"USER REQUEST: '{user_input}'\n\n"
             "TASK: You are an Intelligent Studio Assistant (Producer & Lyricist).\n"
@@ -76,11 +83,39 @@ def process_user_intent(user_input: str):
             "3. MANDATORY TOOL CALL: You must call a tool. Do not just chat.\n"
             "4. FINAL ANSWER: Return the exact JSON from the tool.\n"
         )
-        # Agent runs and returns the output of the last tool call
-        print(f"Agent Processing: {user_input}") 
+        
+        print(f"Producer Processing: {user_input}") 
         response = producer_agent.run(instruction)
-        print(f"Agent Response: {response}")
+        print(f"Producer Response: {response}")
+
+        # 2. CRITIC PHASE (Only for configuration)
+        if isinstance(response, dict) and response.get("action") == "configure":
+            params = response['params']
+            critique_instruction = (
+                f"ACT as a strict Music Studio Critic.\n"
+                f"User Intent: '{user_input}'\n"
+                f"Proposed Settings: {params}\n\n"
+                "CHECKLIST:\n"
+                "- Is the 'prompt' descriptive enough (>10 words)?\n"
+                "- Are 'steps' appropriate (aim for 50+ normally)?\n"
+                "- Does the vibe match the intent?\n\n"
+                "OUTPUT:\n"
+                "- If PASS: Return exactly 'APPROVED'.\n"
+                "- If FAIL: Return a 1-sentence warning for the user.\n"
+            )
+            print("Critic Reviewing...")
+            critique = critic_agent.run(critique_instruction)
+            print(f"Critic Verdict: {critique}")
+            
+            if "APPROVED" not in str(critique).upper():
+                # Block the config and warn user
+                return {
+                    "action": "critique_warning",
+                    "message": f"⚠️ Critic Warning: {str(critique)}"
+                }
+
         return response
+
     except Exception as e:
         print(f"Agent Execution Error: {e}")
         # Fallback

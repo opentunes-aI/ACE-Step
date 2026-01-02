@@ -38,8 +38,9 @@ export default function AgentChat() {
             // Handle Agent Response
             // The agent might return a string, or our structured object
             let replyContent = "I've processed that.";
+            let identity = "Producer";
 
-            if (data?.action === 'configure' || (data?.params && data.params.prompt)) {
+            if (data?.action === 'configure' || (data?.params && data?.params?.prompt)) {
                 // Handle direct return or wrapped return
                 const p = data.params || data;
 
@@ -50,10 +51,15 @@ export default function AgentChat() {
                 if (p.seed) setSeed(p.seed);
 
                 replyContent = `I've configured the studio:\nPrompt: "${p.prompt}"\nSteps: ${p.steps}, CFG: ${p.cfg_scale}`;
+
             } else if (data?.action === 'update_lyrics') {
+                identity = "Lyricist";
                 const lyrics = data.params.lyrics;
                 setLyrics(lyrics);
                 replyContent = `I've written lyrics for you! check the lyrics tab.`;
+            } else if (data?.action === 'critique_warning') {
+                identity = "The Critic";
+                replyContent = data.message;
             } else if (data?.fallback) {
                 replyContent = "I encountered a glitch but set the prompt for you.";
                 setPrompt(data.fallback.prompt);
@@ -65,7 +71,7 @@ export default function AgentChat() {
                 replyContent = JSON.stringify(data); // Debug
             }
 
-            setMessages(prev => [...prev, { role: "agent", content: replyContent }]);
+            setMessages(prev => [...prev, { role: "agent", content: replyContent, identity }]);
 
         } catch (e) {
             setMessages(prev => [...prev, { role: "agent", content: "Error: I couldn't reach the backend agent. Is it running?" }]);
@@ -94,7 +100,7 @@ export default function AgentChat() {
                     <div className="h-14 bg-gradient-to-r from-pink-600/20 to-purple-600/20 border-b border-border flex items-center justify-between px-4">
                         <div className="flex items-center gap-2 font-bold text-foreground">
                             <Sparkles className="w-5 h-5 text-pink-500" />
-                            <span>AI Producer</span>
+                            <span>AI Studio</span>
                         </div>
                         <button onClick={() => setIsOpen(false)} className="hover:text-red-500 transition-colors">
                             <X className="w-5 h-5" />
@@ -107,7 +113,8 @@ export default function AgentChat() {
                             Hi! I'm your AI Producer Agent. Tell me what vibe you want (e.g. "Slow jazz reverb"), and I'll engage the studio.
                         </div>
                         {messages.map((m, i) => (
-                            <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                            <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'}`}>
+                                {m.role === 'agent' && <span className="text-[10px] uppercase font-bold text-muted-foreground mb-1 ml-1">{m.identity || "Producer"}</span>}
                                 <div className={`max-w-[85%] p-3 rounded-2xl text-sm whitespace-pre-wrap ${m.role === 'user' ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-secondary text-secondary-foreground rounded-bl-none'}`}>
                                     {m.content}
                                 </div>
