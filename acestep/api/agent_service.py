@@ -31,6 +31,8 @@ def configure_studio(
         }
     }
 
+import urllib.parse
+
 @tool
 def update_lyrics(content: str) -> Dict[str, Any]:
     """
@@ -43,6 +45,21 @@ def update_lyrics(content: str) -> Dict[str, Any]:
         "params": { "lyrics": content }
     }
 
+@tool
+def generate_cover_art(description: str) -> Dict[str, Any]:
+    """
+    Generates a cover image URL.
+    Args:
+        description: A detailed visual description (e.g. "Cyberpunk city, neon lights, digital art").
+    """
+    encoded = urllib.parse.quote(description)
+    # Using Pollinations.ai for instant free generation
+    url = f"https://image.pollinations.ai/prompt/{encoded}"
+    return {
+        "action": "generate_cover_art",
+        "params": { "image_url": url, "description": description }
+    }
+
 # 2. Check for Ollama
 # We assume localhost:11434 is running.
 OLLAMA_URL = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
@@ -53,7 +70,7 @@ model = LiteLLMModel(
 )
 
 producer_agent = CodeAgent(
-    tools=[configure_studio, update_lyrics],
+    tools=[configure_studio, update_lyrics, generate_cover_art],
     model=model,
     add_base_tools=False,
     additional_authorized_imports=["random"]
@@ -73,15 +90,16 @@ def process_user_intent(user_input: str):
         # 1. PRODUCER PHASE
         instruction = (
             f"USER REQUEST: '{user_input}'\n\n"
-            "TASK: You are an Intelligent Studio Assistant (Producer & Lyricist).\n"
+            "TASK: You are an Intelligent Studio Assistant (Producer, Lyricist, & Visualizer).\n"
             "RULES:\n"
             "1. IF USER WANTS MUSIC SETTINGS: Call 'configure_studio'.\n"
-            "   - Expand the prompt creatively (e.g. 'Pop' -> 'Upbeat Synth-Pop...').\n"
+            "   - Expand the prompt creatively.\n"
             "2. IF USER WANTS LYRICS: Call 'update_lyrics'.\n"
-            "   - WRITE the lyrics yourself first. Be creative! \n"
-            "   - FORMAT: Use [Verse], [Chorus], [Bridge].\n"
-            "3. MANDATORY TOOL CALL: You must call a tool. Do not just chat.\n"
-            "4. FINAL ANSWER: Return the exact JSON from the tool.\n"
+            "   - Write creative lyrics with [Verse]/[Chorus].\n"
+            "3. IF USER WANTS ART/IMAGES: Call 'generate_cover_art'.\n"
+            "   - write a detailed visual prompt.\n"
+            "4. MANDATORY TOOL CALL: You must call a tool.\n"
+            "5. FINAL ANSWER: Return the exact JSON from the tool.\n"
         )
         
         print(f"Producer Processing: {user_input}") 

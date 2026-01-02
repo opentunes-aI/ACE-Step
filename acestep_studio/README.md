@@ -44,6 +44,11 @@ Open [http://localhost:7865](http://localhost:7865).
 
 *   **Social Network**: Explore feed, User Profiles, Song Renaming, and Dynamic Visuals.
 *   **Cloud Sync**: Hybrid "Local-First" architecture. Files stay on disk; metadata syncs to Supabase.
+*   **AI Agent Chat**: A multi-agent system powered by `smolagents` and `Ollama`.
+    *   **The Producer**: Configures studio parameters based on vibe.
+    *   **The Lyricist**: Writes structured lyrics automatically.
+    *   **The Visualizer**: Generates cover art using Pollinations.ai.
+    *   **The Critic**: Quality checks your inputs.
 
 ## 🤝 Contributing
 

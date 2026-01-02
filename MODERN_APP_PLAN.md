@@ -33,9 +33,10 @@ The user directs the session, and the **AI Producer Agent** handles the complexi
 - [x] **Text-to-Config**: "Make it punchier" -> Agent sets paramaters via Tool Calling.
 - [x] **Param-Bot**: Floating Chat Interface implemented.
 
-#### Phase 3.2: Multi-Agent Collaboration
-- [ ] **The Lyricist**: Specialized agent for structure-aware songwriting (Verse/Chorus rules).
-- [ ] **The Critic**: Agent that reviews "Prompt Compliance" before generation.
+#### Phase 3.2: Multi-Agent Collaboration [✅ COMPLETED]
+- [x] **The Lyricist**: Specialized agent for structure-aware songwriting (Verse/Chorus rules).
+- [x] **The Critic**: Agent that reviews "Prompt Compliance" before generation.
+- [x] **The Visualizer**: Art Director agent for generating cover art (Pollinations.ai).
 
 ### Horizon 4: Advanced Creation (The "Song" Layer)
 *Goal: Move from "Clips" to "Songs".*

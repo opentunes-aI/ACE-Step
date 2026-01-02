@@ -37,7 +37,7 @@ export default function AgentChat() {
 
             // Handle Agent Response
             // The agent might return a string, or our structured object
-            let replyContent = "I've processed that.";
+            let replyContent: React.ReactNode = "I've processed that.";
             let identity = "Producer";
 
             if (data?.action === 'configure' || (data?.params && data?.params?.prompt)) {
@@ -57,6 +57,15 @@ export default function AgentChat() {
                 const lyrics = data.params.lyrics;
                 setLyrics(lyrics);
                 replyContent = `I've written lyrics for you! check the lyrics tab.`;
+            } else if (data?.action === 'generate_cover_art') {
+                identity = "Art Director";
+                replyContent = (
+                    <div className="flex flex-col gap-2">
+                        <span className="mb-1">I've created some cover art for you:</span>
+                        <img src={data.params.image_url} alt="Cover" className="w-full rounded-md border border-white/10 shadow-lg" />
+                        <span className="text-[10px] text-muted-foreground italic">"{data.params.description}"</span>
+                    </div>
+                );
             } else if (data?.action === 'critique_warning') {
                 identity = "The Critic";
                 replyContent = data.message;
