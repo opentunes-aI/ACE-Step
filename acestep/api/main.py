@@ -30,13 +30,6 @@ SUPABASE_KEY = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY") # Use Anon for now (up
 if os.getenv("SUPABASE_SERVICE_ROLE_KEY"):
     SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
-supabase = None
-if SUPABASE_URL and SUPABASE_KEY:
-    try:
-        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-        logger.info(f"Supabase Client Initialized: {SUPABASE_URL}")
-    except Exception as e:
-        logger.error(f"Supabase Init Failed: {e}")
 
 # ... logging ...
 
@@ -54,6 +47,14 @@ async def lifespan(app: FastAPI):
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("ace_step_api")
+
+supabase = None
+if SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        logger.info(f"Supabase Client Initialized: {SUPABASE_URL}")
+    except Exception as e:
+        logger.error(f"Supabase Init Failed: {e}")
 
 # --- Data Models ---
 
