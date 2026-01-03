@@ -38,6 +38,11 @@ npm install
 npm run dev
 ```
 
+### 4. Database Setup (Supabase)
+Run the following SQL scripts (found in `acestep_studio/`) in your Supabase SQL Editor to set up the necessary tables:
+1.  `supabase_profiles.sql`: Sets up User Profiles, Avatars bucket, and Triggers.
+2.  `supabase_fix_columns.sql`: Run this ONLY if you encounter "missing column" errors (patches legacy tables).
+
 Open [http://localhost:7865](http://localhost:7865).
 
 ## 🏗️ Architecture

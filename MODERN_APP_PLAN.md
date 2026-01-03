@@ -79,7 +79,21 @@ The platform is divided into two distinct domains:
     *   "Continue as Guest" available for Local Mode.
 - [ ] **Middleware**: Handle subdomain rewriting (`app.*` -> `/studio`).
 
-### Track B: Community Ecosystem [PLANNED]
+### Track B: User Identity [PLANNED]
+*Focus: Identity, Privacy, and Personal Branding.*
+
+1.  **Phase 1: Schema & Storage**
+    *   [x] Create `public.profiles` table (linked to `auth.users`).
+    *   [x] Setup Storage Bucket `avatars`.
+    *   [x] Create Triggers to auto-create profile on User Signup.
+2.  **Phase 2: UI Components**
+    *   [x] **UserMenu**: Header Dropdown (Profile, Settings, Sign Out).
+    *   [x] **ProfileForm**: Modal to edit Username, Bio, and upload Avatar.
+3.  **Phase 3: Integration**
+    *   [x] Replace Email in Header with Avatar/Username.
+    *   [ ] Show Authors in Community Feed.
+
+### Track C: Community Ecosystem [PLANNED]
 *Focus: From "Solo Creator" to "Collaborative Network".*
 
 1.  **Phase 1: The Scaffold (Infrastructure)**
@@ -96,6 +110,7 @@ The platform is divided into two distinct domains:
 ---
 
 ## 4. Immediate Next Steps
-1.  **Community Scaffold**: Implement Phase 1 of Community Ecosystem.
+1.  **Community Scaffold**: Connect real DB to the Community Page.
 2.  **Middleware**: Handle subdomain routing.
+3.  **App: Out-Painting**: Begin Horizon 4 of Studio.
 3.  **App: Out-Painting**: Begin Horizon 4 of Studio.

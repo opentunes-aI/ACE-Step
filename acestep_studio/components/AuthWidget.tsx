@@ -2,25 +2,25 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase";
 import { LogIn, LogOut } from "lucide-react";
-import { User } from "@supabase/supabase-js";
+import { useStore } from "@/utils/store";
+import UserMenu from "./UserMenu";
 
 export default function AuthWidget() {
-    const [user, setUser] = useState<User | null>(null);
+    const { session, setSession } = useStore();
     const [loading, setLoading] = useState(false);
     const [showInput, setShowInput] = useState(false);
     const [email, setEmail] = useState("");
 
-
     useEffect(() => {
         if (!supabase) return;
         supabase.auth.getSession().then(({ data: { session } }) => {
-            setUser(session?.user || null);
+            setSession(session);
         });
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setUser(session?.user || null);
+            setSession(session);
         });
         return () => subscription.unsubscribe();
-    }, []);
+    }, [setSession]);
 
     async function handleLogin() {
         console.log("[Auth] Starting login for:", email);
@@ -31,9 +31,10 @@ export default function AuthWidget() {
         setLoading(true);
         try {
             console.log("[Auth] Calling Supabase API...");
+            // Use window.location.origin + '/studio' to ensure redirection to app
             const { error } = await supabase.auth.signInWithOtp({
                 email,
-                options: { emailRedirectTo: window.location.origin }
+                options: { emailRedirectTo: window.location.origin + '/studio' }
             });
             console.log("[Auth] API Response:", error);
 
@@ -51,11 +52,6 @@ export default function AuthWidget() {
         }
     }
 
-    async function handleLogout() {
-        if (!supabase) return;
-        await supabase.auth.signOut();
-    }
-
     if (!supabase) {
         return (
             <div className="flex items-center gap-2">
@@ -65,18 +61,8 @@ export default function AuthWidget() {
         );
     }
 
-    if (user) {
-        return (
-            <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary/50 border border-border">
-                    <div className="h-2 w-2 rounded-full bg-green-500"></div>
-                    <span className="text-xs font-medium truncate max-w-[100px]">{user.email}</span>
-                </div>
-                <button onClick={handleLogout} className="p-1.5 hover:bg-red-500/10 hover:text-red-500 rounded-full transition-colors" title="Logout">
-                    <LogOut className="w-4 h-4" />
-                </button>
-            </div>
-        );
+    if (session?.user) {
+        return <UserMenu />;
     }
 
     if (showInput) {

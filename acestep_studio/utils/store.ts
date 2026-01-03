@@ -1,8 +1,13 @@
 import { create } from 'zustand';
+import { Session } from '@supabase/supabase-js';
 
 export type MusicFormat = "wav" | "mp3" | "flac" | "ogg";
 
 interface StudioState {
+    // Auth
+    session: Session | null;
+    setSession: (s: Session | null) => void;
+
     // Playback State
     currentTrackUrl: string | null;
     currentTrackName: string | null;
@@ -35,11 +40,14 @@ interface StudioState {
     setActiveJobId: (id: string | null) => void;
     setConsoleOpen: (v: boolean) => void;
 
-    setAllParams: (params: Partial<Omit<StudioState, 'setCurrentTrack' | 'setAllParams' | 'currentTrackUrl' | 'currentTrackName'>>) => void;
+    setAllParams: (params: Partial<Omit<StudioState, 'setCurrentTrack' | 'setAllParams' | 'currentTrackUrl' | 'currentTrackName' | 'session' | 'setSession'>>) => void;
 }
 
-export const useStudioStore = create<StudioState>((set) => ({
+export const useStore = create<StudioState>((set) => ({
     // Defaults
+    session: null,
+    setSession: (s) => set({ session: s }),
+
     currentTrackUrl: null,
     currentTrackName: null,
     prompt: "upbeat techno with synth leads",
@@ -76,3 +84,6 @@ export const useStudioStore = create<StudioState>((set) => ({
 
     setAllParams: (params) => set((state) => ({ ...state, ...params })),
 }));
+
+// Backward compatibility alias if needed, or update consumers
+export const useStudioStore = useStore;
