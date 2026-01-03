@@ -72,6 +72,13 @@ The platform is divided into two distinct domains:
 1.  **Pricing Plans**: Implemented `HomePricing` (Free/Pro/Studio).
 2.  **SEO Optimization**: Tags for "AI Music Generator", "Web3 Music".
 
+### Track A: Platform Architecture
+- [x] **Routing Refactor**: `app/page.tsx` (Home) vs `app/studio` (App).
+- [ ] **Auth Gate**: Protect `/studio` with a dedicated Login Screen (StudioGate).
+    *   Unauthenticated users see "Sign In / Sign Up" prompt.
+    *   Authenticated users get full access.
+- [ ] **Middleware**: Handle subdomain rewriting (`app.*` -> `/studio`).
+
 ---
 
 ## 4. Immediate Next Steps

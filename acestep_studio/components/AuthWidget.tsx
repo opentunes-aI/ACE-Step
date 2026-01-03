@@ -10,6 +10,7 @@ export default function AuthWidget() {
     const [showInput, setShowInput] = useState(false);
     const [email, setEmail] = useState("");
 
+
     useEffect(() => {
         if (!supabase) return;
         supabase.auth.getSession().then(({ data: { session } }) => {

@@ -1,5 +1,6 @@
 import GlobalLayout from "@/components/GlobalLayout";
 import { Metadata } from "next";
+import StudioGate from "@/components/StudioGate";
 
 export const metadata: Metadata = {
     title: "Opentunes Studio",
@@ -12,8 +13,10 @@ export default function StudioLayout({
     children: React.ReactNode;
 }) {
     return (
-        <GlobalLayout>
-            {children}
-        </GlobalLayout>
+        <StudioGate>
+            <GlobalLayout>
+                {children}
+            </GlobalLayout>
+        </StudioGate>
     );
 }
