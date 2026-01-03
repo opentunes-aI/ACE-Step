@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Bot, X, Send, Sparkles, Menu, Plus, MessageSquare, Trash2 } from "lucide-react";
 import { useStudioStore } from "@/utils/store";
 import { API_BASE } from "@/utils/api";
@@ -21,6 +22,10 @@ export default function AgentChat() {
     const [sessions, setSessions] = useState<ChatSession[]>([]);
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
     const [showSessionList, setShowSessionList] = useState(false);
+
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const hasHandledPrompt = useRef(false);
 
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -61,11 +66,27 @@ export default function AgentChat() {
     }, [sessions]);
 
     // Update current session when messages change (Debounced slightly ideally, but direct for now)
+    // Update current session when messages change (Debounced slightly ideally, but direct for now)
     useEffect(() => {
         if (!currentSessionId) return;
         setSessions(prev => prev.map(s => s.id === currentSessionId ? { ...s, messages } : s));
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     }, [messages, currentSessionId]);
+
+    // Handle initial prompt from Landing Page
+    useEffect(() => {
+        const initialPrompt = searchParams.get("initialPrompt");
+        if (initialPrompt && !hasHandledPrompt.current) {
+            hasHandledPrompt.current = true;
+            // Clear param to prevent re-trigger on refresh
+            router.replace('/studio', { scroll: false });
+
+            setIsOpen(true);
+            // Delay slightly to ensure state is ready if needed, or just send
+            setTimeout(() => sendMessage(initialPrompt), 500);
+        }
+    }, [searchParams]);
+
 
     function createNewSession() {
         const newSession: ChatSession = {
@@ -177,18 +198,21 @@ export default function AgentChat() {
         );
     };
 
-    async function sendMessage() {
-        if (!input.trim()) return;
+    async function sendMessage(overrideInput?: string) {
+        // Allow passing input directly (for initial prompt)
+        const textToSend = typeof overrideInput === 'string' ? overrideInput : input;
+
+        if (!textToSend.trim()) return;
 
         // Auto-title (Simplified)
         const currentSession = sessions.find(s => s.id === currentSessionId);
         if (currentSession && messages.length === 0) {
             setSessions(prev => prev.map(s =>
-                s.id === currentSessionId ? { ...s, title: input.length > 20 ? input.substring(0, 20) + "..." : input } : s
+                s.id === currentSessionId ? { ...s, title: textToSend.length > 20 ? textToSend.substring(0, 20) + "..." : textToSend } : s
             ));
         }
 
-        const userMsg = { role: "user", content: input };
+        const userMsg = { role: "user", content: textToSend };
         // Sanitize history for backend (Convert objects to strings)
         const validHistory = messages.map(m => ({
             role: m.role,
@@ -382,7 +406,7 @@ export default function AgentChat() {
                                         autoFocus
                                     />
                                     <button
-                                        onClick={sendMessage}
+                                        onClick={() => sendMessage()}
                                         disabled={loading || !input.trim()}
                                         className="p-2 bg-primary rounded-lg text-white disabled:opacity-50 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
                                     >
