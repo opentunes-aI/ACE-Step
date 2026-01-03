@@ -49,18 +49,27 @@ The platform is divided into two distinct domains:
 ---
 
 ## PART B: The Home Landing Plan (Opentunes.ai)
-*Focus: Growth, SEO, Branding, and User Onboarding.*
+*Focus: Growth, Branding, and On-Chain Value Prop.*
 
-### Phase 1: Infrastructure & Launch [🚀 ACTIVE]
-- [x] **SaaS Architecture**: Refactored `app/page.tsx` (Home) vs `app/studio` (App).
-- [x] **Hero Page**: High-conversion dark mode landing page.
-- [ ] **Middleware**: Domain routing logic (`app.*` -> `/studio`).
-- [ ] **Pricing Page**: Subscription tiers display.
-- [ ] **Auth Integration**: "Sign In" button redirects to Studio dashboard.
+### Phase 1: The "Hook" (Hero & Value Props) [✅ COMPLETED]
+1.  **Hero Section**:
+    *   Headline: "Your Agentic AI Music Studio".
+    *   Subhead: "Collaborate with AI Producer Agents. Own your work on-chain."
+    *   **Interactive Input**: "Describe your vibe..." -> Redirects to Studio pre-filled.
+    *   **Action Item**: Wire up `initialPrompt` query param in Studio App (`ControlPanel.tsx`).
+2.  **Value Prop Grid**:
+    *   **Agentic Intelligence**: "Don't just prompt. Direct a team of agents (Producer, Lyricist, Visualizer)."
+    *   **Web3 Monetization**: "Mint your hits. Royalties are baked in from day one."
+    *   **Pro Fidelity**: "High-definition audio generation, just like Suno/Udio but open."
 
-### Phase 2: Content & Growth
-- [ ] **Blog Engine**: SEO-optimized content.
-- [ ] **Case Studies**: Showcase "Best of Opentunes".
+### Phase 2: Engagement & Social Proof [✅ COMPLETED]
+1.  **Audio Carousel**: Implemented `HomeShowcase` grid.
+2.  **Agent Visualizer**: (Included in Hero text).
+3.  **Community Feed**: Static placeholder implemented.
+
+### Phase 3: Commercial & SEO [🚀 ACTIVE]
+1.  **Pricing Plans**: Implemented `HomePricing` (Free/Pro/Studio).
+2.  **SEO Optimization**: Tags for "AI Music Generator", "Web3 Music".
 
 ---
 

@@ -1,72 +1,148 @@
+"use client";
 import Link from 'next/link';
-import { ArrowRight, Music, Sparkles, Zap } from "lucide-react";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { ArrowRight, Music, Sparkles, Zap, Bot, Coins, Waves } from "lucide-react";
+import HomeShowcase from '@/components/HomeShowcase';
+import HomePricing from '@/components/HomePricing';
 
 export default function LandingPage() {
+    const [prompt, setPrompt] = useState("");
+    const router = useRouter();
+
+    const handleStart = (e: React.FormEvent) => {
+        e.preventDefault();
+        // Redirect to studio with prompt query param (to be handled by studio)
+        const url = prompt ? `/studio?initialPrompt=${encodeURIComponent(prompt)}` : '/studio';
+        router.push(url);
+    };
+
     return (
-        <div className="min-h-screen bg-black text-white selection:bg-purple-500/30 font-sans">
+        <div className="min-h-screen bg-black text-white selection:bg-purple-500/30 font-sans overflow-x-hidden">
+            {/* Background Gradients */}
+            <div className="fixed inset-0 z-0 pointer-events-none">
+                <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-purple-900/20 blur-[120px] animate-pulse"></div>
+                <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-pink-900/20 blur-[120px] animate-pulse" style={{ animationDelay: '2s' }}></div>
+            </div>
+
             {/* Header */}
-            <header className="fixed top-0 w-full z-50 border-b border-white/10 bg-black/50 backdrop-blur-xl">
-                <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-2 font-bold text-xl tracking-tighter">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-pink-500 to-purple-500 flex items-center justify-center">
-                            <Music className="w-4 h-4 text-white" />
+            <header className="fixed top-0 w-full z-50 border-b border-white/5 bg-black/50 backdrop-blur-xl">
+                <div className="container mx-auto px-6 h-20 flex items-center justify-between">
+                    <div className="flex items-center gap-3 font-bold text-xl tracking-tighter">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
+                            <Music className="w-5 h-5 text-white" />
                         </div>
-                        Opentunes.ai
+                        <span>Opentunes.ai</span>
                     </div>
                     <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-400">
-                        <Link href="#" className="hover:text-white transition-colors">Features</Link>
-                        <Link href="#" className="hover:text-white transition-colors">Pricing</Link>
-                        <Link href="#" className="hover:text-white transition-colors">Blog</Link>
+                        <Link href="#features" className="hover:text-white transition-colors">Features</Link>
+                        <Link href="#agents" className="hover:text-white transition-colors">AI Agents</Link>
+                        <Link href="#pricing" className="hover:text-white transition-colors">Pricing</Link>
                     </nav>
                     <div className="flex items-center gap-4">
                         <Link href="/studio" className="text-sm font-medium text-gray-400 hover:text-white transition-colors">
                             Sign In
                         </Link>
-                        <Link href="/studio" className="px-5 py-2 rounded-full bg-white text-black text-sm font-bold hover:scale-105 transition-transform">
+                        <Link href="/studio" className="px-6 py-2.5 rounded-full bg-white text-black text-sm font-bold hover:scale-105 transition-transform shadow-[0_0_20px_-5px_rgba(255,255,255,0.3)]">
                             Launch Studio
                         </Link>
                     </div>
                 </div>
             </header>
 
-            {/* Hero */}
-            <main className="pt-32 pb-16 px-6 container mx-auto text-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-medium text-purple-400 mb-8 animate-pulse">
+            {/* Hero Section */}
+            <main className="relative z-10 pt-40 pb-0 px-6 container mx-auto text-center">
+                <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-bold text-purple-300 mb-8 uppercase tracking-wide">
                     <Sparkles className="w-3 h-3" />
-                    <span>Now with Multi-Agent Orchestration</span>
+                    <span>The Future of Music Creation</span>
                 </div>
 
-                <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 bg-clip-text text-transparent bg-gradient-to-b from-white to-gray-500 max-w-4xl mx-auto leading-tight">
-                    Your Personal <br /> AI Music Producer.
+                <h1 className="text-5xl md:text-8xl font-black tracking-tight mb-8 leading-tight">
+                    Your Agentic <br />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">AI Music Studio</span>
                 </h1>
 
-                <p className="text-lg md:text-xl text-gray-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                    Opentunes is the first <strong>Agentic Music Studio</strong>. Collaborate with AI Producers, Lyricists, and Art Directors to craft professional tracks in seconds.
+                <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-12 leading-relaxed font-light">
+                    Direct a team of AI Agents to compose, write, and produce.
+                    <br className="hidden md:block" />
+                    Then <strong>Mint on Chain</strong> to own your royalties forever.
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Link href="/studio" className="px-8 py-4 rounded-full bg-gradient-to-r from-pink-600 to-purple-600 text-white font-bold text-lg hover:shadow-[0_0_40px_-10px_rgba(168,85,247,0.5)] transition-all flex items-center gap-2">
-                        Start Creating Free
-                        <ArrowRight className="w-5 h-5" />
-                    </Link>
-                    <Link href="#" className="px-8 py-4 rounded-full bg-white/5 border border-white/10 text-white font-medium hover:bg-white/10 transition-colors flex items-center gap-2">
-                        <Zap className="w-5 h-5 text-yellow-400" />
-                        Join Waiting List
-                    </Link>
-                </div>
+                {/* Interactive Input */}
+                <form onSubmit={handleStart} className="max-w-xl mx-auto mb-24 relative group">
+                    <div className="absolute -inset-1 bg-gradient-to-r from-pink-500 to-purple-600 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                    <div className="relative flex items-center bg-black rounded-full border border-white/10 p-2 shadow-2xl">
+                        <input
+                            type="text"
+                            placeholder="Describe your dream track (e.g., 'Chill lofi beat with rain sounds')"
+                            className="flex-1 bg-transparent border-none outline-none text-white px-6 py-3 placeholder:text-gray-600"
+                            value={prompt}
+                            onChange={(e) => setPrompt(e.target.value)}
+                        />
+                        <button type="submit" className="bg-white text-black rounded-full p-3 hover:bg-gray-200 transition-colors">
+                            <ArrowRight className="w-5 h-5" />
+                        </button>
+                    </div>
+                </form>
 
-                {/* Visual Placeholder */}
-                <div className="mt-20 relative max-w-5xl mx-auto rounded-xl border border-white/10 bg-white/5 overflow-hidden shadow-2xl">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10"></div>
-                    <div className="h-[400px] flex items-center justify-center text-gray-600 font-mono">
-                        [App Screenshot Placeholder]
+                {/* Feature Grid */}
+                <div id="features" className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto text-left mb-20">
+                    {/* Card 1: Agents */}
+                    <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-purple-500/50 transition-colors group">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <Bot className="w-6 h-6 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-3">Agentic Co-Creation</h3>
+                        <p className="text-gray-400 leading-relaxed">
+                            Don't just prompt. Direct a team of specialized agents:
+                            <span className="text-white"> The Producer</span>,
+                            <span className="text-white"> The Lyricist</span>, and
+                            <span className="text-white"> The Visualizer</span>.
+                        </p>
+                    </div>
+
+                    {/* Card 2: Web3 */}
+                    <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-indigo-500/50 transition-colors group">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <Coins className="w-6 h-6 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-3">On-Chain Ownership</h3>
+                        <p className="text-gray-400 leading-relaxed">
+                            Stop renting your creativity. Mint your AI generated tracks as NFTs to
+                            enable instant monetization and royalty tracking.
+                        </p>
+                    </div>
+
+                    {/* Card 3: Quality */}
+                    <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-emerald-500/50 transition-colors group">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                            <Waves className="w-6 h-6 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold mb-3">Studio Fidelity</h3>
+                        <p className="text-gray-400 leading-relaxed">
+                            Powered by **ACE-Step** 3.5B. Generate 48kHz stereo mastery with
+                            granular control over instruments, mood, and mixing.
+                        </p>
                     </div>
                 </div>
+
+                {/* New Components */}
+                <HomeShowcase />
+                <HomePricing />
+
             </main>
 
-            {/* Placeholder Footer */}
-            <footer className="border-t border-white/10 py-12 text-center text-gray-600 text-sm mt-20">
-                © 2026 Opentunes AI Inc. | Built for the Future of Music.
+            {/* Footer */}
+            <footer className="border-t border-white/5 py-12 bg-black/80">
+                <div className="container mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6 text-gray-500 text-sm">
+                    <div>© 2026 Opentunes AI Inc.</div>
+                    <div className="flex gap-6">
+                        <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
+                        <Link href="#" className="hover:text-white transition-colors">Terms</Link>
+                        <Link href="#" className="hover:text-white transition-colors">Twitter</Link>
+                        <Link href="#" className="hover:text-white transition-colors">Discord</Link>
+                    </div>
+                </div>
             </footer>
         </div>
     );
