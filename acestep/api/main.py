@@ -146,9 +146,11 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="ACE-Step API", lifespan=lifespan)
 
+# CORS Configuration
+origins = os.getenv("CORS_ALLOWED_ORIGINS", "*").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Allow all for local dev
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

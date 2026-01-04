@@ -30,6 +30,7 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 
 ### 1a. Backend Environment (For Deployment)
 The Python backend (`run_api.bat`) supports:
+*   `CORS_ALLOWED_ORIGINS` (default: `*` - Comma separated domains)
 *   `OLLAMA_BASE_URL` (default: `http://localhost:11434`)
 *   `ACE_OUTPUT_DIR` (default: `./outputs`)
 

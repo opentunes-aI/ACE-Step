@@ -21,7 +21,7 @@ Scope: **Foundation -> Studio (Creation) -> Community (Discovery) -> Commerciali
 *   [x] **Centralized Env Vars**: Refactor all hardcoded URLs to use environment variables.
     *   Frontend: `NEXT_PUBLIC_API_URL` (default: `http://localhost:8000`), `NEXT_PUBLIC_SUPABASE_URL`.
     *   Backend: `OLLAMA_BASE_URL` (default: `http://localhost:11434`), `ACE_OUTPUT_DIR`.
-*   [ ] **CORS Security**: specific allow-lists for production domains.
+*   [x] **CORS Security**: Implemented `CORS_ALLOWED_ORIGINS` (default `*`) for production restrictions.
 
 ### 1.3 Hybrid Storage Engine (Local + Cloud)
 *   **Strategy**: "Dual Write, Smart Read".
