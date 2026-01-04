@@ -5,7 +5,8 @@ import os
 
 # Model Setup
 OLLAMA_URL = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
-model = LiteLLMModel(model_id="ollama/qwen2.5:3b", api_base=OLLAMA_URL)
+AGENT_MODEL = os.getenv("AGENT_MODEL_ID", "ollama/qwen2.5:3b")
+model = LiteLLMModel(model_id=AGENT_MODEL, api_base=OLLAMA_URL)
 
 @tool
 def configure_studio(prompt: str, steps: int = 50, cfg_scale: float = 10.0, duration: float = 60.0, seed: Optional[int] = None) -> Dict[str, Any]:

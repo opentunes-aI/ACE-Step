@@ -165,6 +165,41 @@ We must show the user *exactly* what the AI team is doing in real-time.
 
 ---
 
+
+### 4.8 Phase 4 Reinforcement (Robustness & Optimization) [✅ COMPLETE]
+*Focus: Stability, Performance, and Error Handling for Production.*
+
+1.  **Frontend Architecture**:
+    *   [x] **Refactor**: Split `AgentChat.tsx` into `useChatStream` (Hook) and `MessageBubble` (UI).
+    *   [x] **State**: Decouple Stream parsing from UI rendering.
+
+2.  **Backend Stability**:
+    *   [x] **JSON Robustness**: Replace regex parsing with Pydantic-based `parse_llm_json`.
+    *   [x] **Config**: Move hardcoded Model IDs to `.env` (`AGENT_MODEL_ID`).
+    *   [x] **Startup Speed**: Implement Lazy Loading for `RAGEngine`.
+
+---
+
+### 4.9 Validation & Testing Strategy [✅ ACTIVE]
+*Focus: Ensuring reliability across the hybrid architecture.*
+
+#### 1. Infrastructure Reference
+*   **Frontend Studio**: `http://localhost:7865` (Next.js)
+*   **Backend API**: `http://localhost:8000` (FastAPI)
+
+#### 2. Test Suite
+*   **Integration Test (Headless)**:
+    *   *Command*: `python test_agent_headless.py`
+    *   *Scope*: Verifies Backend-to-Model-to-JSON pipeline without UI. Checks Streaming, Plan Parsing, and Agent Communication.
+*   **Browser Smoke Test**:
+    *   *Scope*: Verifies UI Rendering, Agent Log streams, and Side Effects (e.g., Studio Config).
+    *   *Requirement*: **Antigravity Chrome Extension** installed on Profile `abi666`.
+*   **Static Analysis**:
+    *   *Command*: `npm run lint` (in `acestep_studio`).
+    *   *Scope*: Verifies TypeScript type safety for refactored components.
+
+---
+
 ## Phase 5: The Viral Loop & Growth [PLANNED]
 *Focus: Retention, Sharing, and SEO.*
 

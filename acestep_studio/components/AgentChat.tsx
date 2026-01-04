@@ -2,332 +2,59 @@
 import { useState, useRef, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Bot, X, Send, Sparkles, Menu, Plus, MessageSquare, Trash2 } from "lucide-react";
-import { useStudioStore } from "@/utils/store";
-import { API_BASE } from "@/utils/api";
-
-type ChatSession = {
-    id: string;
-    title: string;
-    messages: any[];
-    timestamp: number;
-};
+import { useChatStream } from "./agent-chat/useChatStream";
+import { MessageBubble } from "./agent-chat/MessageBubble";
 
 export default function AgentChat() {
     const [isOpen, setIsOpen] = useState(false);
     const [input, setInput] = useState("");
-    const [messages, setMessages] = useState<any[]>([]);
-    const [loading, setLoading] = useState(false);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Session State
-    const [sessions, setSessions] = useState<ChatSession[]>([]);
-    const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-    const [showSessionList, setShowSessionList] = useState(false);
+    const {
+        messages,
+        loading,
+        sendMessage,
+        sessions,
+        currentSessionId,
+        showSessionList,
+        setShowSessionList,
+        createNewSession,
+        switchSession,
+        deleteSession
+    } = useChatStream();
 
     const searchParams = useSearchParams();
     const router = useRouter();
     const hasHandledPrompt = useRef(false);
 
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-
-    // Store setters
-    const { setPrompt, setSteps, setCfgScale, setDuration, setSeed, setLyrics } = useStudioStore();
-
-    // Load Sessions
+    // Auto-scroll
     useEffect(() => {
-        try {
-            const savedSessions = localStorage.getItem("agent_sessions");
-            if (savedSessions) {
-                const parsed = JSON.parse(savedSessions);
-                setSessions(parsed);
-                if (parsed.length > 0) {
-                    setCurrentSessionId(parsed[0].id);
-                    setMessages(parsed[0].messages);
-                } else {
-                    createNewSession();
-                }
-            } else {
-                createNewSession();
-            }
-        } catch (e) {
-            console.error("Failed to load sessions", e);
-            createNewSession();
-        }
-    }, []);
-
-    // Save Sessions (Only when sessions change)
-    useEffect(() => {
-        if (sessions.length > 0) {
-            try {
-                localStorage.setItem("agent_sessions", JSON.stringify(sessions));
-            } catch (e) {
-                console.error("Failed to save sessions", e);
-            }
-        }
-    }, [sessions]);
-
-    // Update current session when messages change (Debounced slightly ideally, but direct for now)
-    // Update current session when messages change (Debounced slightly ideally, but direct for now)
-    useEffect(() => {
-        if (!currentSessionId) return;
-        setSessions(prev => prev.map(s => s.id === currentSessionId ? { ...s, messages } : s));
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages, currentSessionId]);
+    }, [messages]);
 
-    // Handle initial prompt from Landing Page
-    // Handle initial prompt from Landing Page or Post-Login Redirect
+    // Handle initial prompt
     useEffect(() => {
         let initialPrompt = searchParams.get("initialPrompt");
-
-        // If not in URL, check if we stored it pre-login
         if (!initialPrompt && typeof window !== 'undefined') {
             initialPrompt = localStorage.getItem('pendingPrompt');
-            if (initialPrompt) {
-                localStorage.removeItem('pendingPrompt');
-            }
+            if (initialPrompt) localStorage.removeItem('pendingPrompt');
         }
 
         if (initialPrompt && !hasHandledPrompt.current) {
             hasHandledPrompt.current = true;
-            // Clear param to prevent re-trigger on refresh if it was in URL
             if (searchParams.get("initialPrompt")) {
                 router.replace('/studio', { scroll: false });
             }
-
             setIsOpen(true);
-            // Delay slightly to ensure state is ready if needed, or just send
             setTimeout(() => sendMessage(initialPrompt!), 500);
         }
     }, [searchParams]);
 
-
-    function createNewSession() {
-        const newSession: ChatSession = {
-            id: Date.now().toString(),
-            title: `New Session ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`,
-            messages: [],
-            timestamp: Date.now()
-        };
-        setSessions(prev => [newSession, ...prev]);
-        setCurrentSessionId(newSession.id);
-        setMessages([]);
-        setShowSessionList(false);
-    }
-
-    function deleteSession(e: React.MouseEvent, id: string) {
-        e.stopPropagation();
-        const newSessions = sessions.filter(s => s.id !== id);
-        setSessions(newSessions);
-        if (id === currentSessionId) {
-            if (newSessions.length > 0) {
-                setCurrentSessionId(newSessions[0].id);
-                setMessages(newSessions[0].messages);
-            } else {
-                createNewSession();
-            }
-        }
-    }
-
-    function switchSession(session: ChatSession) {
-        setCurrentSessionId(session.id);
-        setMessages(session.messages);
-        setShowSessionList(false);
-    }
-
-    // Helper to render message content (which is now PURE DATA)
-    const renderMessageContent = (msg: any) => {
-        if (msg.role === 'user') return msg.content;
-
-        let actions = [];
-        if (Array.isArray(msg.content)) actions = msg.content;
-        else if (typeof msg.content === 'object') actions = [msg.content];
-        else return <div className="whitespace-pre-wrap">{String(msg.content)}</div>;
-
-        return (
-            <div className="space-y-4">
-                {actions.map((act: any, i: number) => {
-                    if (!act) return null;
-                    const params = act.params || act;
-
-                    if (act.action === 'configure' || (params?.prompt && !act.message)) {
-                        return (
-                            <div key={i} className="border-l-2 border-pink-500 pl-2 mb-2">
-                                <p className="text-[10px] font-bold opacity-50 mb-1">PRODUCER</p>
-                                <p className="text-xs">I've configured the studio:</p>
-                                <div className="bg-black/20 p-2 rounded mt-1">
-                                    <p className="text-[10px] font-mono opacity-80 truncate">Prompt: "{String(params.prompt)}"</p>
-                                    <p className="text-[10px] font-mono opacity-80">Steps: {params.steps}, CFG: {params.cfg_scale}</p>
-                                </div>
-                            </div>
-                        );
-                    }
-
-                    if (act.action === 'update_lyrics') {
-                        return (
-                            <div key={i} className="border-l-2 border-blue-500 pl-2 mb-2">
-                                <p className="text-[10px] font-bold opacity-50 mb-1">LYRICIST</p>
-                                <p className="text-xs">I've written lyrics for you! Check the lyrics tab.</p>
-                                <div className="max-h-20 overflow-hidden text-[10px] opacity-60 mt-1 italic whitespace-pre-wrap font-serif">
-                                    {String(params.lyrics || "").substring(0, 100)}...
-                                </div>
-                            </div>
-                        );
-                    }
-
-                    if (act.action === 'generate_cover_art') {
-                        return (
-                            <div key={i} className="flex flex-col gap-2 border-l-2 border-purple-500 pl-2 mb-2">
-                                <p className="text-[10px] font-bold opacity-50">ART DIRECTOR</p>
-                                <span className="mb-1 text-xs">I've designed this cover:</span>
-                                <img src={params.image_url} alt="Cover" className="w-full rounded-md border border-white/10 shadow-lg" />
-                                <span className="text-[10px] text-muted-foreground italic">"{params.description}"</span>
-                            </div>
-                        );
-                    }
-
-                    if (act.action === 'critique_warning') {
-                        return (
-                            <div key={i} className="border-l-2 border-yellow-500 pl-2 text-yellow-200 mb-2">
-                                <p className="text-[10px] font-bold opacity-50 mb-1">THE CRITIC</p>
-                                {String(act.message || "")}
-                            </div>
-                        );
-                    }
-
-                    if (act.fallback) {
-                        return (
-                            <div key={i} className="text-xs text-orange-400">
-                                {String(act.message || "I encountered a glitch but set the prompt.")}
-                            </div>
-                        );
-                    }
-
-                    if (act.type === 'log') {
-                        return (
-                            <div key={i} className="flex items-center gap-2 mb-1 px-2 py-1 bg-black/10 rounded border border-white/5 animate-in fade-in slide-in-from-left-2">
-                                <span className="text-[10px] font-mono text-pink-400 uppercase tracking-widest min-w-[60px]">{act.step}</span>
-                                <span className="text-xs text-foreground/80 truncate">{act.message}</span>
-                            </div>
-                        );
-                    }
-
-                    if (typeof act === 'string') return <div key={i}>{act}</div>;
-                    if (act.message) return <div key={i}>{String(act.message)}</div>;
-
-                    return <div key={i} className="text-[10px] font-mono opacity-50 overflow-x-auto">{JSON.stringify(act)}</div>;
-                })}
-            </div>
-        );
-    };
-
-    async function sendMessage(overrideInput?: string) {
-        const textToSend = typeof overrideInput === 'string' ? overrideInput : input;
-        if (!textToSend.trim()) return;
-
-        // Auto-title
-        const currentSession = sessions.find(s => s.id === currentSessionId);
-        if (currentSession && messages.length === 0) {
-            setSessions(prev => prev.map(s =>
-                s.id === currentSessionId ? { ...s, title: textToSend.length > 20 ? textToSend.substring(0, 20) + "..." : textToSend } : s
-            ));
-        }
-
-        const userMsg = { role: "user", content: textToSend };
-        const validHistory = messages.map(m => ({
-            role: m.role,
-            content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
-        }));
-
-        setMessages(prev => [...prev, userMsg]);
+    const handleSend = () => {
+        if (!input.trim()) return;
+        sendMessage(input);
         setInput("");
-        setLoading(true);
-
-        const tempId = Date.now();
-        setMessages(prev => [...prev, { role: "agent", content: [], identity: "Studio Crew", isStreaming: true, id: tempId }]);
-
-        try {
-            const res = await fetch(`${API_BASE}/agent/chat`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ message: userMsg.content, history: validHistory })
-            });
-
-            if (!res.body) throw new Error("No Stream");
-            const reader = res.body.getReader();
-            const decoder = new TextDecoder();
-
-            let accumulatedActions: any[] = [];
-            let buffer = "";
-
-            while (true) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split("\n");
-                buffer = lines.pop() || "";
-
-                for (const line of lines) {
-                    if (!line.trim()) continue;
-                    try {
-                        const data = JSON.parse(line);
-
-                        if (data.type === 'log') {
-                            accumulatedActions.push(data);
-                        } else if (data.type === 'plan') {
-                            accumulatedActions.push({
-                                type: 'log',
-                                step: 'Director',
-                                message: `Plan: Music=${data.plan.music}, Lyrics=${data.plan.lyrics}, Art=${data.plan.art}`
-                            });
-                        } else if (data.type === 'result') {
-                            if (Array.isArray(data.data)) {
-                                accumulatedActions.push(...data.data);
-                            }
-                        }
-
-                        // Update UI
-                        setMessages(prev => prev.map(m =>
-                            (m as any).id === tempId ? { ...m, content: [...accumulatedActions] } : m
-                        ));
-
-                        // Side Effects (Live Updates)
-                        let act = data;
-                        if (data.type === 'result' && Array.isArray(data.data)) {
-                            data.data.forEach((d: any) => handleSideEffect(d));
-                        } else {
-                            // Extract params from log if available (e.g. for loading states) but mainly look for actions
-                        }
-                    } catch (e) { console.error("Parse Error", e); }
-                }
-            }
-        } catch (e: any) {
-            console.error(e);
-            const msg = e.message || String(e);
-            if (msg !== 'AbortError' && !msg.includes('The user aborted')) {
-                setMessages(prev => prev.map(m =>
-                    (m as any).id === tempId ? { ...m, content: [...(Array.isArray(m.content) ? m.content : []), { message: `Error: ${msg}` }] } : m
-                ));
-            }
-        } finally {
-            setLoading(false);
-        }
-    }
-
-    // Helper for Side Effects
-    function handleSideEffect(act: any) {
-        if (!act) return;
-        const params = act.params || act;
-        if (act.action === 'configure' || (params?.prompt && !act.message)) {
-            if (params.prompt) setPrompt(String(params.prompt));
-            if (params.steps) setSteps(Number(params.steps) || 30);
-            if (params.cfg_scale) setCfgScale(Number(params.cfg_scale) || 7.0);
-            if (params.duration) setDuration(Number(params.duration) || 30);
-            if (params.seed) setSeed(Number(params.seed) || null);
-        } else if (act.action === 'update_lyrics') {
-            const text = params.lyrics || params.content || params.lyric_content || "";
-            if (text) setLyrics(String(text));
-        }
-    }
+    };
 
     return (
         <>
@@ -413,19 +140,7 @@ export default function AgentChat() {
                                         </div>
                                     )}
                                     {messages.map((m, i) => (
-                                        <div key={i} className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}>
-                                            {m.role === 'agent' && (
-                                                <div className="flex items-center gap-2 mb-1 ml-1">
-                                                    <div className={`w-2 h-2 rounded-full ${m.identity === 'Studio Crew' ? 'bg-gradient-to-r from-pink-500 to-purple-500' : 'bg-pink-500'}`} />
-                                                    <span className="text-xs font-bold text-foreground tracking-wider uppercase opacity-90">
-                                                        {m.identity || "Producer"}
-                                                    </span>
-                                                </div>
-                                            )}
-                                            <div className={`max-w-[90%] p-3 rounded-2xl text-sm shadow-sm ${m.role === 'user' ? 'bg-primary text-primary-foreground rounded-br-none' : 'bg-secondary/80 text-secondary-foreground rounded-bl-none border border-white/5 backdrop-blur-sm'}`}>
-                                                {renderMessageContent(m)}
-                                            </div>
-                                        </div>
+                                        <MessageBubble key={i} message={m} identity={m.identity} />
                                     ))}
                                     {loading && (
                                         <div className="flex justify-start animate-in fade-in">
@@ -444,11 +159,11 @@ export default function AgentChat() {
                                         placeholder="Describe your sound..."
                                         value={input}
                                         onChange={e => setInput(e.target.value)}
-                                        onKeyDown={e => e.key === 'Enter' && sendMessage()}
+                                        onKeyDown={e => e.key === 'Enter' && handleSend()}
                                         autoFocus
                                     />
                                     <button
-                                        onClick={() => sendMessage()}
+                                        onClick={handleSend}
                                         disabled={loading || !input.trim()}
                                         className="p-2 bg-primary rounded-lg text-white disabled:opacity-50 hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
                                     >

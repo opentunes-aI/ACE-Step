@@ -18,35 +18,50 @@ class RAGEngine:
     def __init__(self):
         if self._initialized: return
         
-        logger.info("Initializing RAG Engine...")
+        # Lazy Config
+        self.embedding_model_name = os.getenv("RAG_EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+        self.model = None
+        self.supabase: Optional[Client] = None
+        self._ready_check_done = False
+        
+        logger.info("RAG Engine instantiated (Lazy Loading).")
+        self._initialized = True
+
+    def _ensure_ready(self) -> bool:
+        """
+        Lazy loader for heavy assets (Model) and Network (Supabase).
+        """
+        if self.model and self.supabase: return True
+        if self._ready_check_done and not self.supabase: return False # Failed prev attempt
+
         try:
-            # Load Lightweight Model (384-dim)
-            self.model = SentenceTransformer('all-MiniLM-L6-v2')
+            if not self.model:
+                logger.info(f"Loading Embedding Model: {self.embedding_model_name}...")
+                self.model = SentenceTransformer(self.embedding_model_name)
             
-            # Connect to Supabase
-            url = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
-            key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
-            
-            if url and key:
-                self.supabase: Client = create_client(url, key)
-                self._ready = True
-                logger.info("RAG Engine Ready.")
-            else:
-                logger.warning("Supabase credentials missing. RAG Disabled.")
-                self._ready = False
+            if not self.supabase:
+                url = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+                key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
                 
+                if url and key:
+                    self.supabase = create_client(url, key)
+                else:
+                    logger.warning("Supabase credentials missing. RAG Disabled.")
+                    self._ready_check_done = True
+                    return False
+            
+            return True
         except Exception as e:
             logger.error(f"RAG Init Failed: {e}")
-            self._ready = False
-        
-        self._initialized = True
+            self._ready_check_done = True
+            return False
 
     def index_item(self, content: str, type: str, metadata: Dict[str, Any] = {}) -> bool:
         """
         Generates embedding and saves to 'agent_memory'.
         type: 'audio_prompt' | 'lyrics'
         """
-        if not self._ready: return False
+        if not self._ensure_ready(): return False
         
         try:
             embedding = self.model.encode(content).tolist()
@@ -67,7 +82,7 @@ class RAGEngine:
         """
         Uses RPC 'match_agent_memory' to find similar content.
         """
-        if not self._ready: return []
+        if not self._ensure_ready(): return []
 
         try:
             embedding = self.model.encode(query).tolist()

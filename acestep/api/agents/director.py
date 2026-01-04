@@ -4,6 +4,7 @@ import asyncio
 import json
 import re
 import os
+from pydantic import BaseModel, ValidationError
 
 # Import Specialists
 from .producer import producer_agent
@@ -12,7 +13,8 @@ from .visualizer import visualizer_agent
 from .critic import critic_agent
 
 OLLAMA_URL = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
-model = LiteLLMModel(model_id="ollama/qwen2.5:3b", api_base=OLLAMA_URL)
+AGENT_MODEL = os.getenv("AGENT_MODEL_ID", "ollama/qwen2.5:3b")
+model = LiteLLMModel(model_id=AGENT_MODEL, api_base=OLLAMA_URL)
 
 director_agent = CodeAgent(
     tools=[], 
@@ -21,14 +23,33 @@ director_agent = CodeAgent(
     description="You are the Studio Director. You analyze user requests and delegate tasks."
 )
 
-def extract_json_from_text(text: str) -> Optional[Dict]:
-    try:
-        match = re.search(r"```json\s*(\{.*?\})\s*```", text, re.DOTALL)
-        if match: return json.loads(match.group(1))
-        start = text.find('{')
-        end = text.rfind('}')
-        if start != -1 and end != -1: return json.loads(text[start:end+1])
+class AgentPlan(BaseModel):
+    music: bool
+    lyrics: bool
+    art: bool
+
+def parse_llm_json(text: str) -> Optional[Dict]:
+    """Robust JSON extraction from LLM output."""
+    clean_text = text.strip()
+    
+    # Attempt 1: Direct JSON
+    try: return json.loads(clean_text)
     except: pass
+
+    # Attempt 2: Markdown Code Block
+    match = re.search(r"```(?:json)?\s*(\{.*?\})\s*```", clean_text, re.DOTALL)
+    if match:
+        try: return json.loads(match.group(1))
+        except: pass
+
+    # Attempt 3: Fuzzy extraction of first object
+    try:
+        start = clean_text.find('{')
+        end = clean_text.rfind('}')
+        if start != -1 and end != -1:
+            return json.loads(clean_text[start:end+1])
+    except: pass
+            
     return None
 
 async def run_producer(context: str):
@@ -61,8 +82,15 @@ async def process_user_intent(user_input: str, history: List[Dict[str, str]] = [
             "Example: User='Make a song about love' -> {\"music\": true, \"lyrics\": true, \"art\": true}"
         )
         plan_raw = await asyncio.to_thread(director_agent.run, plan_query)
-        extracted = extract_json_from_text(str(plan_raw))
-        if extracted: plan = extracted
+        extracted = parse_llm_json(str(plan_raw))
+        if extracted:
+            try:
+                # Validate with Pydantic
+                validated = AgentPlan(**extracted)
+                plan = validated.model_dump()
+            except ValidationError:
+                # Soft fallback if keys missing
+                plan.update(extracted)
         
         yield json.dumps({"type": "plan", "plan": plan})
     except Exception as e:
@@ -100,7 +128,7 @@ async def process_user_intent(user_input: str, history: List[Dict[str, str]] = [
                         
                         snippet = "Done"
                         if isinstance(res, str):
-                            extracted = extract_json_from_text(res)
+                            extracted = parse_llm_json(res)
                             if extracted:
                                 if extracted.get("action") == "configure":
                                     p = extracted.get("params", {})
@@ -116,11 +144,11 @@ async def process_user_intent(user_input: str, history: List[Dict[str, str]] = [
 
     # Flatten results
     producer_out = outputs.get("producer")
-    if isinstance(producer_out, str): producer_out = extract_json_from_text(producer_out)
+    if isinstance(producer_out, str): producer_out = parse_llm_json(producer_out)
     
     lyricist_out = outputs.get("lyricist")
     if isinstance(lyricist_out, str):
-        extracted_lyrics = extract_json_from_text(lyricist_out)
+        extracted_lyrics = parse_llm_json(lyricist_out)
         if extracted_lyrics:
             lyricist_out = extracted_lyrics
         else:
@@ -157,7 +185,7 @@ async def process_user_intent(user_input: str, history: List[Dict[str, str]] = [
     if plan.get('art'):
         yield json.dumps({"type": "log", "step": "Visualizer", "message": "Generating Cover Art..."})
         viz_out = await asyncio.to_thread(visualizer_agent.run, f"{context_str}\nTASK: Generate Cover Art.")
-        if isinstance(viz_out, str): viz_out = extract_json_from_text(viz_out)
+        if isinstance(viz_out, str): viz_out = parse_llm_json(viz_out)
         if viz_out: results.append(viz_out)
         yield json.dumps({"type": "log", "step": "Visualizer", "message": "Cover Art Ready 🎨"})
 

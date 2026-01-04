@@ -2,7 +2,8 @@ from smolagents import CodeAgent, LiteLLMModel
 import os
 
 OLLAMA_URL = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
-model = LiteLLMModel(model_id="ollama/qwen2.5:3b", api_base=OLLAMA_URL)
+AGENT_MODEL = os.getenv("AGENT_MODEL_ID", "ollama/qwen2.5:3b")
+model = LiteLLMModel(model_id=AGENT_MODEL, api_base=OLLAMA_URL)
 
 critic_agent = CodeAgent(
     tools=[], 
