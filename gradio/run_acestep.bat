@@ -4,7 +4,7 @@ REM This script activates the virtual environment and launches ACE-Step
 REM with the model path set to "G:\My Drive\models"
 
 echo Starting ACE-Step...
-call venv\Scripts\activate
+call ..\venv\Scripts\activate
 
 REM Launch ACE-Step
 REM You can add optimizing flags here if needed, e.g.:
