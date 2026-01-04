@@ -300,11 +300,14 @@ export default function AgentChat() {
                     } catch (e) { console.error("Parse Error", e); }
                 }
             }
-        } catch (e) {
+        } catch (e: any) {
             console.error(e);
-            setMessages(prev => prev.map(m =>
-                (m as any).id === tempId ? { ...m, content: [...(m.content as any[]), { message: "Error: Connection Failed." }] } : m
-            ));
+            const msg = e.message || String(e);
+            if (msg !== 'AbortError' && !msg.includes('The user aborted')) {
+                setMessages(prev => prev.map(m =>
+                    (m as any).id === tempId ? { ...m, content: [...(Array.isArray(m.content) ? m.content : []), { message: `Error: ${msg}` }] } : m
+                ));
+            }
         } finally {
             setLoading(false);
         }

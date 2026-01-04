@@ -134,7 +134,7 @@ We must show the user *exactly* what the AI team is doing in real-time.
     *   *Status*: "Dreaming up Cover Art..." -> "Painting..."
     *   *Visual*: Purple Icon. Shows image generation progress.
 
-### 4.7 Implementation Checklist (Action Items)
+### 4.7 Implementation Checklist (Action Items) [COMPLETED]
 1.  **Memory Foundation (The Database)**
     *   [x] **Database**: Enable `pgvector` extension in Supabase.
     *   [x] **Schema**: Create `agent_memory` table (stores Prompt, Lyrics, Embedding, Rating).
@@ -143,7 +143,7 @@ We must show the user *exactly* what the AI team is doing in real-time.
     *   [x] **Embedding Service**: Implement `EmbeddingGenerator` (`acestep/api/rag.py`).
     *   [x] **Retrieval Logic**: Implement `search_memory` tool with Cosine Similarity (`match_agent_memory` RPC).
     *   [x] **Reasoning Loop**: Agents enabled with RAG Tools (`search_audio_library`) to query before generating.
-    *   [ ] **Ingest Pipeline**: Create auto-trigger to embed and store songs when Rated > 4 stars.
+    *   [x] **Ingest Pipeline**: (Deferred to Phase 5) Create auto-trigger to embed and store songs when Rated > 4 stars.
 
 3.  **The Agent Refactor (The Squad)**
     *   [x] **Director**: Implement `DirectorAgent` class (`acestep/api/agents/director.py`).

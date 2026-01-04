@@ -33,7 +33,7 @@ def extract_json_from_text(text: str) -> Optional[Dict]:
 
 async def run_producer(context: str):
     # Returns (name, result)
-    return ("producer", await asyncio.to_thread(producer_agent.run, f"{context}\nTASK: Search library for inspiration, then Configure studio parameters. Return JSON."))
+    return ("producer", await asyncio.to_thread(producer_agent.run, f"{context}\nTASK: Search library for inspiration. IF NO MATCHES, use your own knowledge. ALWAYS Configure studio parameters and Return JSON."))
 
 async def run_lyricist(context: str):
     # Returns (name, result)
