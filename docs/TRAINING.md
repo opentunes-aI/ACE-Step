@@ -118,7 +118,7 @@ If your VRAM is not sufficient, you can reduce the `r` and `lora_alpha` paramete
 ```
 
 ## 4. Run Training
-Run `python trainer.py` with the following parameter introduction:
+Run `python tools/trainer.py` with the following parameter introduction:
 
 # Trainer Parameter Interpretation
 

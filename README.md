@@ -90,6 +90,7 @@ Opentunes uses a modern **Split Architecture**:
 We welcome contributors! Opentunes is open-source software.
 *   **Frontend**: Work in `acestep_studio/`.
 *   **Backend**: Work in `acestep/`.
+*   **Debugging**: Run `python tools/test_api.py` to verify the backend API is responding correctly.
 
 ## 📜 License
 Apache 2.0. This project builds upon the open-source ACE-Step research.

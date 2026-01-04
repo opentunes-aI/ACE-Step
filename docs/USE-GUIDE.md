@@ -1,4 +1,6 @@
-# ACE-Step User Guide
+# ACE-Step User Guide (Legacy Gradio Interface)
+
+> **Note**: This guide describes the legacy Gradio interface (`run_acestep.bat`). For the new Opentunes Studio interface (`run_studio.bat`), please refer to the main [README](../README.md).
 
 This guide explains the components of the ACE-Step "text2music" interface and how to use them to generate and modify music.
 
