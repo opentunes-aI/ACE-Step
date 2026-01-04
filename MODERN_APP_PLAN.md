@@ -77,6 +77,7 @@ Scope: **Foundation -> Studio (Creation) -> Community (Discovery) -> Commerciali
 *Focus: User Acquisition, Branding, and On-Chain Value Prop.*
 
 ### 2.1 The "Hook" Setup
+*   [x] **Visual Overhaul (v2)**: Implemented "Deep Space" theme, CSS Aurora background, and glassmorphism.
 *   [x] **Hero Section**: Interactive "Describe your vibe" input redirects to Studio.
 *   [x] **Handover**: `initialPrompt` query param populates Producer Agent.
 *   [x] **Branding**: Unified Header styling, Logo, and Favicon.

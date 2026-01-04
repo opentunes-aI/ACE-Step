@@ -22,15 +22,12 @@ export default function LandingPage() {
     return (
         <div className="min-h-screen bg-black text-white selection:bg-purple-500/30 font-sans overflow-x-hidden">
             {/* Background Image */}
-            <div className="fixed inset-0 z-0 pointer-events-none">
-                <Image
-                    src="/hero-bg.jpg"
-                    alt="Background"
-                    fill
-                    className="object-cover opacity-60"
-                    priority
-                />
-                <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-black"></div>
+            {/* Aurora Background (CSS Only, Reliable & Premium) */}
+            <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+                <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-purple-600/20 blur-[120px] animate-pulse" />
+                <div className="absolute top-[40%] -right-[10%] w-[60vw] h-[60vw] rounded-full bg-cyan-600/10 blur-[120px]" />
+                <div className="absolute -bottom-[20%] left-[20%] w-[50vw] h-[50vw] rounded-full bg-blue-600/20 blur-[100px]" />
+                <div className="absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay"></div>
             </div>
 
             {/* Header */}
@@ -71,9 +68,9 @@ export default function LandingPage() {
                     </span>
                 </div>
 
-                <h1 className="text-5xl md:text-8xl font-black tracking-tight mb-8 leading-tight">
+                <h1 className="text-5xl md:text-8xl font-black font-heading tracking-tight mb-8 leading-tight drop-shadow-2xl">
                     Your Agentic <br />
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500">AI Music Studio</span>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-cyan-400 to-emerald-400 animate-gradient-x">AI Music Studio</span>
                 </h1>
 
                 <p className="text-xl md:text-2xl text-gray-400 max-w-3xl mx-auto mb-12 leading-relaxed font-light">
@@ -100,55 +97,53 @@ export default function LandingPage() {
                 </form>
 
                 {/* Feature Grid */}
-                <div id="features" className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto text-left mb-20">
+                <div id="features" className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto text-left mb-20 pointer-events-none">
                     {/* Card 1: Agents */}
-                    <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-purple-500/50 transition-colors group">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-purple-500/50 hover:-translate-y-2 hover:bg-white/10 transition-all duration-300 group pointer-events-auto backdrop-blur-md">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-purple-500/20">
                             <Bot className="w-6 h-6 text-white" />
                         </div>
-                        <h3 className="text-xl font-bold mb-3">Agentic Co-Creation</h3>
-                        <p className="text-gray-400 leading-relaxed text-sm">
+                        <h3 className="text-xl font-bold font-heading mb-3 text-white">Agentic Co-Creation</h3>
+                        <p className="text-gray-400 leading-relaxed text-sm group-hover:text-gray-300 transition-colors">
                             Don't just prompt. Direct a team of specialized agents:
-                            <span className="text-white"> The Producer</span>,
-                            <span className="text-white"> The Lyricist</span>,
-                            <span className="text-white"> The Critic</span>, and
-                            <span className="text-white"> The Visualizer</span>.
+                            <span className="text-purple-300 font-semibold"> The Producer</span>,
+                            <span className="text-cyan-300 font-semibold"> The Lyricist</span>.
                         </p>
                     </div>
 
                     {/* Card 2: Web3 */}
-                    <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-indigo-500/50 transition-colors group">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-cyan-500/50 hover:-translate-y-2 hover:bg-white/10 transition-all duration-300 group pointer-events-auto backdrop-blur-md">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-cyan-500/20">
                             <Coins className="w-6 h-6 text-white" />
                         </div>
-                        <h3 className="text-xl font-bold mb-3">On-Chain Ownership</h3>
-                        <p className="text-gray-400 leading-relaxed text-sm">
+                        <h3 className="text-xl font-bold font-heading mb-3 text-white">On-Chain Ownership</h3>
+                        <p className="text-gray-400 leading-relaxed text-sm group-hover:text-gray-300 transition-colors">
                             Stop renting your creativity. Mint your AI generated tracks as NFTs to
-                            enable instant monetization and royalty tracking.
+                            enable instant monetization.
                         </p>
                     </div>
 
                     {/* Card 3: Quality */}
-                    <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-emerald-500/50 transition-colors group">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-emerald-500/50 hover:-translate-y-2 hover:bg-white/10 transition-all duration-300 group pointer-events-auto backdrop-blur-md">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-400 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-emerald-500/20">
                             <Waves className="w-6 h-6 text-white" />
                         </div>
-                        <h3 className="text-xl font-bold mb-3">Studio Fidelity</h3>
-                        <p className="text-gray-400 leading-relaxed text-sm">
+                        <h3 className="text-xl font-bold font-heading mb-3 text-white">Studio Fidelity</h3>
+                        <p className="text-gray-400 leading-relaxed text-sm group-hover:text-gray-300 transition-colors">
                             Powered by Our Advanced AI Music Gen Engine. Generate 48kHz stereo mastery with
-                            granular control over instruments, mood, and mixing.
+                            granular control.
                         </p>
                     </div>
 
                     {/* Card 4: Community */}
-                    <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-orange-500/50 transition-colors group">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
+                    <div className="p-8 rounded-3xl bg-white/5 border border-white/10 hover:border-orange-500/50 hover:-translate-y-2 hover:bg-white/10 transition-all duration-300 group pointer-events-auto backdrop-blur-md">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform shadow-lg shadow-orange-500/20">
                             <Globe className="w-6 h-6 text-white" />
                         </div>
-                        <h3 className="text-xl font-bold mb-3">Community Showcase</h3>
-                        <p className="text-gray-400 leading-relaxed text-sm">
+                        <h3 className="text-xl font-bold font-heading mb-3 text-white">Community Showcase</h3>
+                        <p className="text-gray-400 leading-relaxed text-sm group-hover:text-gray-300 transition-colors">
                             Discover trending tracks, remix community hits, and collaborate with producers
-                            worldwide in a shared sonic metaverse.
+                            worldwide.
                         </p>
                     </div>
                 </div>
