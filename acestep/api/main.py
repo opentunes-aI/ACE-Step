@@ -420,17 +420,24 @@ async def delete_file(filename: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 # --- Agent Endpoints ---
-from acestep.api.agent_service import process_user_intent
+from acestep.api.agents.director import process_user_intent
 
 class AgentChatRequest(BaseModel):
     message: str
     history: List[Dict[str, str]] = []
 
+from fastapi.responses import StreamingResponse
+
 @app.post("/agent/chat")
 async def chat_with_producer(req: AgentChatRequest):
     """
-    Talk to the AI Producer Agent to configure studio parameters.
+    Streaming Endpoint for Agent Interaction.
     """
-    # Run in threadpool to avoid blocking event loop
-    return await asyncio.to_thread(process_user_intent, req.message, req.history)
+    async def event_generator():
+        # Iterate over the Director's generator
+        async for chunk in process_user_intent(req.message, req.history):
+            # Ensure each JSON chunk is on a new line for easy parsing
+            yield chunk + "\n"
+
+    return StreamingResponse(event_generator(), media_type="application/x-ndjson")
 

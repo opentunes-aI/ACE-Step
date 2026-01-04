@@ -79,12 +79,14 @@ Open [http://localhost:7865](http://localhost:7865).
     *   **Community Feed**: Global showcase of public tracks with Author attribution.
     *   **Cloud Sync**: Hybrid "Local-First" architecture. Files stay on disk; metadata syncs to Supabase.
 *   **AI Agent Chat**: A robust multi-agent orchestrator powered by `smolagents` and `Ollama`.
-    *   **Orchestrator Pattern**: A backend planner dynamically activates specific agents (Producer, Lyricist, Visualizer) based on intent.
-    *   **Multi-Session Management**: Support for multiple persistent chat threads to manage different creative projects.
-    *   **The Producer**: Configures studio parameters based on vibe.
-    *   **The Lyricist**: Writes structured lyrics automatically.
-    *   **The Visualizer**: Generates cover art using Pollinations.ai.
-    *   **The Critic**: Quality checks your inputs.
+    *   **Retrieval-Augmented Generation (RAG)**: Agents search a "Memory" database (Supabase `pgvector`) to find previous successful prompts and lyrics before generating.
+    *   **Real-Time Streaming**: Watch the "Director", "Producer", "Lyricist", and "Critic" think and collaborate live in the chat.
+    *   **The Squad**:
+        *   **🎬 Director**: Analyzing intent and planning tasks.
+        *   **🎹 Producer**: Searching the audio library and configuring the Studio.
+        *   **✍️ Lyricist**: Researching style references and drafting lyrics.
+        *   **🎨 Visualizer**: Painting cover art descriptions.
+        *   **🧐 Critic**: Acting as an advisor to ensure coherence.
 
 ## 🤝 Contributing
 

@@ -201,6 +201,15 @@ export default function AgentChat() {
                         );
                     }
 
+                    if (act.type === 'log') {
+                        return (
+                            <div key={i} className="flex items-center gap-2 mb-1 px-2 py-1 bg-black/10 rounded border border-white/5 animate-in fade-in slide-in-from-left-2">
+                                <span className="text-[10px] font-mono text-pink-400 uppercase tracking-widest min-w-[60px]">{act.step}</span>
+                                <span className="text-xs text-foreground/80 truncate">{act.message}</span>
+                            </div>
+                        );
+                    }
+
                     if (typeof act === 'string') return <div key={i}>{act}</div>;
                     if (act.message) return <div key={i}>{String(act.message)}</div>;
 
@@ -211,12 +220,10 @@ export default function AgentChat() {
     };
 
     async function sendMessage(overrideInput?: string) {
-        // Allow passing input directly (for initial prompt)
         const textToSend = typeof overrideInput === 'string' ? overrideInput : input;
-
         if (!textToSend.trim()) return;
 
-        // Auto-title (Simplified)
+        // Auto-title
         const currentSession = sessions.find(s => s.id === currentSessionId);
         if (currentSession && messages.length === 0) {
             setSessions(prev => prev.map(s =>
@@ -225,7 +232,6 @@ export default function AgentChat() {
         }
 
         const userMsg = { role: "user", content: textToSend };
-        // Sanitize history for backend (Convert objects to strings)
         const validHistory = messages.map(m => ({
             role: m.role,
             content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
@@ -235,67 +241,88 @@ export default function AgentChat() {
         setInput("");
         setLoading(true);
 
+        const tempId = Date.now();
+        setMessages(prev => [...prev, { role: "agent", content: [], identity: "Studio Crew", isStreaming: true, id: tempId }]);
+
         try {
             const res = await fetch(`${API_BASE}/agent/chat`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ message: userMsg.content, history: validHistory })
             });
-            const data = await res.json();
 
-            // Normalize Payload
-            const payload = (data && data.result) ? data.result : data;
+            if (!res.body) throw new Error("No Stream");
+            const reader = res.body.getReader();
+            const decoder = new TextDecoder();
 
-            // Extract Actions
-            let actions: any[] = [];
-            if (payload?.action) {
-                actions.push(payload);
-            } else if (payload && typeof payload === 'object') {
-                Object.values(payload).forEach((val: any) => {
-                    if (val && typeof val === 'object' && val.action) {
-                        actions.push(val);
-                    }
-                });
-            }
+            let accumulatedActions: any[] = [];
+            let buffer = "";
 
-            if (actions.length === 0) {
-                if (typeof payload === 'string' || payload?.message) actions.push({ message: payload });
-                else if (Object.keys(payload || {}).length > 0) actions.push(payload);
-            }
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
 
-            // Execute Side Effects (State Updates)
-            let finalIdentity = "Producer";
-            if (actions.length > 1) finalIdentity = "Studio Crew";
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split("\n");
+                buffer = lines.pop() || "";
 
-            actions.forEach((act) => {
-                if (!act) return;
-                const params = act.params || act;
+                for (const line of lines) {
+                    if (!line.trim()) continue;
+                    try {
+                        const data = JSON.parse(line);
 
-                if (act.action === 'configure' || (params?.prompt && !act.message)) {
-                    finalIdentity = actions.length === 1 ? "Producer" : finalIdentity;
-                    if (params.prompt) setPrompt(String(params.prompt));
-                    if (params.steps) setSteps(Number(params.steps) || 30);
-                    if (params.cfg_scale) setCfgScale(Number(params.cfg_scale) || 7.0);
-                    if (params.duration) setDuration(Number(params.duration) || 30);
-                    if (params.seed) setSeed(Number(params.seed) || null);
-                } else if (act.action === 'update_lyrics') {
-                    finalIdentity = actions.length === 1 ? "Lyricist" : finalIdentity;
-                    setLyrics(String(params.lyrics || ""));
-                } else if (act.action === 'generate_cover_art') {
-                    finalIdentity = actions.length === 1 ? "Art Director" : finalIdentity;
-                } else if (act.action === 'critique_warning') {
-                    finalIdentity = actions.length === 1 ? "The Critic" : finalIdentity;
+                        if (data.type === 'log') {
+                            accumulatedActions.push(data);
+                        } else if (data.type === 'plan') {
+                            accumulatedActions.push({
+                                type: 'log',
+                                step: 'Director',
+                                message: `Plan: Music=${data.plan.music}, Lyrics=${data.plan.lyrics}, Art=${data.plan.art}`
+                            });
+                        } else if (data.type === 'result') {
+                            if (Array.isArray(data.data)) {
+                                accumulatedActions.push(...data.data);
+                            }
+                        }
+
+                        // Update UI
+                        setMessages(prev => prev.map(m =>
+                            (m as any).id === tempId ? { ...m, content: [...accumulatedActions] } : m
+                        ));
+
+                        // Side Effects (Live Updates)
+                        let act = data;
+                        if (data.type === 'result' && Array.isArray(data.data)) {
+                            data.data.forEach((d: any) => handleSideEffect(d));
+                        } else {
+                            // Extract params from log if available (e.g. for loading states) but mainly look for actions
+                        }
+                    } catch (e) { console.error("Parse Error", e); }
                 }
-            });
-
-            // Store Pure Data
-            setMessages(prev => [...prev, { role: "agent", content: actions, identity: finalIdentity }]);
-
+            }
         } catch (e) {
             console.error(e);
-            setMessages(prev => [...prev, { role: "agent", content: "Error: Client-side processing failed. Check console." }]);
+            setMessages(prev => prev.map(m =>
+                (m as any).id === tempId ? { ...m, content: [...(m.content as any[]), { message: "Error: Connection Failed." }] } : m
+            ));
         } finally {
             setLoading(false);
+        }
+    }
+
+    // Helper for Side Effects
+    function handleSideEffect(act: any) {
+        if (!act) return;
+        const params = act.params || act;
+        if (act.action === 'configure' || (params?.prompt && !act.message)) {
+            if (params.prompt) setPrompt(String(params.prompt));
+            if (params.steps) setSteps(Number(params.steps) || 30);
+            if (params.cfg_scale) setCfgScale(Number(params.cfg_scale) || 7.0);
+            if (params.duration) setDuration(Number(params.duration) || 30);
+            if (params.seed) setSeed(Number(params.seed) || null);
+        } else if (act.action === 'update_lyrics') {
+            const text = params.lyrics || params.content || params.lyric_content || "";
+            if (text) setLyrics(String(text));
         }
     }
 
