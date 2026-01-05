@@ -37,6 +37,7 @@ export default function ControlPanel() {
 
     const [loading, setLoading] = useState(false);
     const [showAdvanced, setShowAdvanced] = useState(false);
+    const [showPresets, setShowPresets] = useState(false);
     const [lyricsTab, setLyricsTab] = useState<'text' | 'visual'>('text');
 
     // Lyrics Wizard State
@@ -111,22 +112,29 @@ export default function ControlPanel() {
             </h2>
 
             {/* Genre Preset */}
-            <div className="space-y-3">
-                <label className="text-xs font-bold uppercase tracking-wider text-gray-400 flex justify-between items-center">
+            <div className="space-y-3 shrink-0">
+                <button
+                    onClick={() => setShowPresets(!showPresets)}
+                    className="w-full text-xs font-bold uppercase tracking-wider text-gray-400 flex justify-between items-center hover:text-white transition-colors"
+                >
                     <span>Style Presets</span>
-                </label>
-                <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1 custom-scrollbar">
-                    {Object.entries(GENRES).map(([name, promptText]) => (
-                        <button
-                            key={name}
-                            onClick={() => setPrompt(promptText)}
-                            className="px-3 py-1.5 rounded-full text-[11px] font-bold border border-white/10 bg-white/5 hover:bg-purple-600 hover:border-purple-500 hover:text-white transition-all text-gray-300 whitespace-nowrap active:scale-95 shadow-sm backdrop-blur-sm"
-                            title={promptText}
-                        >
-                            {name}
-                        </button>
-                    ))}
-                </div>
+                    {showPresets ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                </button>
+
+                {showPresets && (
+                    <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1 custom-scrollbar animate-in slide-in-from-top-2 fade-in duration-200">
+                        {Object.entries(GENRES).map(([name, promptText]) => (
+                            <button
+                                key={name}
+                                onClick={() => setPrompt(promptText)}
+                                className="px-3 py-1.5 rounded-full text-[11px] font-bold border border-white/10 bg-white/5 hover:bg-purple-600 hover:border-purple-500 hover:text-white transition-all text-gray-300 whitespace-nowrap active:scale-95 shadow-sm backdrop-blur-sm"
+                                title={promptText}
+                            >
+                                {name}
+                            </button>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* Prompt */}

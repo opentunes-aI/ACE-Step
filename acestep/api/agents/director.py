@@ -133,20 +133,24 @@ async def process_user_intent(user_input: str, history: List[Dict[str, str]] = [
                         if isinstance(res, (tuple, list)) and len(res) > 0:
                             res = res[0]
 
+                        # Handle smolagents custom types (AgentText, etc.)
+                        if not isinstance(res, (dict, str, list, tuple)) and res is not None:
+                             if hasattr(res, 'to_string'): res = res.to_string()
+                             elif hasattr(res, 'text'): res = res.text
+                             else: res = str(res)
+
                         if isinstance(res, dict):
                             # Heuristic: Auto-wrap incomplete Producer outputs
                             if name == "producer" and "action" not in res and any(k in res for k in ["prompt", "genre", "mood", "bpm", "steps"]):
-                                # If it looks like a config, make it a config
                                 wrapped_params = res.copy()
-                                # Fallback: Map 'genre/mood' to 'prompt' if prompt is missing
                                 if "prompt" not in wrapped_params:
                                     parts = [str(wrapped_params.get(k)) for k in ["genre", "mood", "instruments"] if k in wrapped_params]
                                     wrapped_params["prompt"] = ", ".join(parts)
-                                
-                                res = {
-                                    "action": "configure",
-                                    "params": wrapped_params
-                                }
+                                res = {"action": "configure", "params": wrapped_params}
+
+                            # Heuristic: Auto-wrap incomplete Lyricist outputs
+                            elif name == "lyricist" and "action" not in res and any(k in res for k in ["lyrics", "content", "text"]):
+                                res = {"action": "update_lyrics", "params": res}
 
                             valid_result = res
                             if res.get("action") == "configure":
@@ -155,7 +159,16 @@ async def process_user_intent(user_input: str, history: List[Dict[str, str]] = [
                             elif res.get("action") == "update_lyrics":
                                 snippet = "Lyrics Drafted"
                         
-                        elif isinstance(res, str):
+                        else:
+                            # Force conversion to string for any non-dict type (AgentText, etc.)
+                            if not isinstance(res, str):
+                                if hasattr(res, 'text'): res = res.text
+                                else: res = str(res)
+
+                            # SANITIZE: Remove Smolagents Tool Logs
+                            if "Calling tools:" in res:
+                                res = res.split("Calling tools:")[0].strip()
+                            
                             extracted = parse_llm_json(res)
                             if extracted:
                                 valid_result = extracted
@@ -166,18 +179,18 @@ async def process_user_intent(user_input: str, history: List[Dict[str, str]] = [
                                     snippet = "Lyrics Drafted"
                             else:
                                 # Fallback logic for Lyricist raw text
-                                if name == "lyricist" and ("[" in res or len(res) > 50):
-                                     valid_result = {
-                                        "action": "update_lyrics",
-                                        "params": { "lyrics": res },
-                                        "fallback": True
-                                     }
-                                     snippet = "Lyrics Drafted (Text Mode)"
+                                if name == "lyricist":
+                                     clean_res = re.sub(r"```.*?```", "", res, flags=re.DOTALL).strip()
+                                     if clean_res and (len(clean_res) > 20 or "[" in clean_res):
+                                         valid_result = {
+                                            "action": "update_lyrics",
+                                            "params": { "lyrics": clean_res },
+                                            "fallback": True
+                                         }
+                                         snippet = "Lyrics Drafted (Text Mode)"
                                 else:
                                     # Parsing Failed
                                     snippet = f"Error: Invalid JSON from {name}. Raw: {res[:50]}..."
-                        else:
-                             snippet = f"Error: {name} returned unknown type: {type(res)}"
 
                         # Log the completion
                         yield json.dumps({"type": "log", "step": name.capitalize(), "message": snippet})

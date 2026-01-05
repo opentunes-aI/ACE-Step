@@ -191,6 +191,9 @@ We must show the user *exactly* what the AI team is doing in real-time.
     *   [x] **JSON Robustness**: Replace regex parsing with Pydantic-based `parse_llm_json`.
     *   [x] **Config**: Move hardcoded Model IDs to `.env` (`AGENT_MODEL_ID`).
     *   [x] **Startup Speed**: Implement Lazy Loading for `RAGEngine`.
+    *   [x] **Output Sanitization**: Stripping tool logs (`Calling tools...`) from UI.
+    *   [x] **Type Safety**: Robust handling of `smolagents` native types (`AgentText`).
+    *   [x] **Heuristic Recovery**: Auto-wrapping of incomplete Agent results (Producer/Lyricist).
 
 ---
 
