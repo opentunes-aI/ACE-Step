@@ -29,7 +29,10 @@ class ModelManager:
                 torch_compile=False,
                 cpu_offload=True # Enabled for 8GB VRAM GPUs
             )
-            logger.info("Model loaded successfully.")
+            logger.info("Pipeline initialized. Pre-loading weights to RAM...")
+            # Eagerly load weights so first generation is fast
+            self.pipeline.load_checkpoint(self.pipeline.checkpoint_dir)
+            logger.info("Model weights loaded successfully.")
         except Exception as e:
             logger.error(f"Failed to load model: {e}")
             raise e
