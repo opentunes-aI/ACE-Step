@@ -2,6 +2,7 @@ from smolagents import CodeAgent, LiteLLMModel, tool
 from typing import Dict, Any
 import urllib.parse
 import os
+import random
 
 OLLAMA_URL = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
 AGENT_MODEL = os.getenv("AGENT_MODEL_ID", "ollama/qwen2.5:3b")
@@ -16,10 +17,11 @@ def generate_cover_art(description: str) -> Dict[str, Any]:
         description: A visual description (e.g. "Cyberpunk city, neon lights").
     """
     encoded = urllib.parse.quote(description)
-    url = f"https://image.pollinations.ai/prompt/{encoded}"
+    seed = random.randint(1, 100000)
+    url = f"https://image.pollinations.ai/prompt/{encoded}?seed={seed}"
     return {
         "action": "generate_cover_art",
-        "params": { "image_url": url, "description": description }
+        "params": { "image_url": url, "description": description, "seed": seed }
     }
 
 visualizer_agent = CodeAgent(
