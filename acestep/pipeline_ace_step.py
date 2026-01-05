@@ -1491,13 +1491,15 @@ class ACEStepPipeline:
 
         start_time = time.time()
         if progress:
-            progress(0, desc="Starting...")
+            progress(0.02, desc="Initializing...")
 
         if audio2audio_enable and ref_audio_input is not None:
             task = "audio2audio"
 
         if not self.loaded:
             logger.warning("Checkpoint not loaded, loading checkpoint...")
+            if progress:
+                progress(0.05, desc="Loading checkpoint (this may take time)...")
             if self.quantized:
                 self.load_quantized_checkpoint(self.checkpoint_dir)
             else:
@@ -1506,6 +1508,8 @@ class ACEStepPipeline:
         self.load_lora(lora_name_or_path, lora_weight)
         load_model_cost = time.time() - start_time
         logger.info(f"Model loaded in {load_model_cost:.2f} seconds.")
+        if progress:
+            progress(0.1, desc="Model loaded. Preparing...")
 
         start_time = time.time()
 

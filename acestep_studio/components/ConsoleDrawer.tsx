@@ -8,14 +8,16 @@ import { useStudioStore } from "@/utils/store";
 
 export default function ConsoleDrawer() {
     const { activeJobId, isConsoleOpen, setConsoleOpen } = useStudioStore();
-    const [logs, setLogs] = useState<string[]>([]);
+    const [logs, setLogs] = useState<{ time: string, message: string }[]>([]);
     const [status, setStatus] = useState<JobStatus | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
+    const isCompletingRef = useRef(false);
 
     // Auto-poll on new job
     useEffect(() => {
         if (activeJobId) {
-            setLogs([`Connecting to job ${activeJobId}...`]);
+            isCompletingRef.current = false;
+            setLogs([{ time: new Date().toLocaleTimeString(), message: `Connecting to job ${activeJobId}...` }]);
             setStatus(null);
 
             // Start polling
@@ -25,30 +27,44 @@ export default function ConsoleDrawer() {
                 try {
                     const s = await getStatus(activeJobId);
                     setStatus(s);
-                    // Append message if different from last logged message
-                    setLogs(prev => {
-                        const lastMsg = prev[prev.length - 1];
-                        // Only add if message changed and is meaningful
-                        if (s.message && (!lastMsg || !lastMsg.includes(s.message))) {
-                            return [...prev, s.message];
-                        }
-                        return prev;
-                    });
 
-                    if (s.status === "completed") {
+                    // Standard progress logs
+                    if (s.status === "processing" || s.status === "queued") {
+                        setLogs(prev => {
+                            const lastMsg = prev[prev.length - 1];
+                            if (s.message && (!lastMsg || !lastMsg.message.includes(s.message))) {
+                                return [...prev, { time: new Date().toLocaleTimeString(), message: s.message }];
+                            }
+                            return prev;
+                        });
+                    }
+
+                    // Handle Completion (Once)
+                    if (s.status === "completed" && !isCompletingRef.current) {
+                        isCompletingRef.current = true;
+                        if (intervalRef.current) clearInterval(intervalRef.current);
+
+                        // Add final message from backend if not already there
+                        if (s.message) {
+                            setLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), message: s.message }]);
+                        }
+
                         if (s.result && s.result.length > 0) {
-                            setLogs(prev => [...prev, "Syncing metadata to cloud..."]);
+                            setLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), message: "Syncing metadata to cloud..." }]);
                             syncTrackToCloud(s.result[0]).then(() => {
-                                setLogs(prev => [...prev, "Cloud Sync: OK"]);
+                                setLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), message: "Cloud Sync: OK" }]);
                             });
                         }
                     }
 
-                    if (s.status === "completed" || s.status === "failed") {
+                    if (s.status === "failed") {
                         if (intervalRef.current) clearInterval(intervalRef.current);
+                        if (s.message) {
+                            setLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), message: `Error: ${s.message}` }]);
+                        }
                     }
                 } catch {
-                    setLogs(prev => [...prev, "Polling error..."]);
+                    setLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), message: "Polling error..." }]);
                 }
             }, 1000);
         }
@@ -106,8 +122,8 @@ export default function ConsoleDrawer() {
             <div className="p-4 font-mono text-xs flex-1 overflow-y-auto space-y-1 bg-black/95 text-zinc-300">
                 {logs.map((log, i) => (
                     <div key={i} className="border-b border-white/5 pb-0.5 mb-0.5 last:border-0 break-words">
-                        <span className="text-zinc-600 mr-2 select-none">[{new Date().toLocaleTimeString()}]</span>
-                        {log}
+                        <span className="text-zinc-600 mr-2 select-none">[{log.time}]</span>
+                        {log.message}
                     </div>
                 ))}
                 {status?.status === 'failed' && (

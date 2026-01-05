@@ -37,7 +37,7 @@ export async function generateMusic(req: GenerationRequest): Promise<JobStatus> 
 }
 
 export async function getStatus(jobId: string): Promise<JobStatus> {
-    const res = await fetch(`${API_BASE}/status/${jobId}`);
+    const res = await fetch(`${API_BASE}/status/${jobId}`, { cache: 'no-store' });
     if (!res.ok) throw new Error("Failed to get status");
     return res.json();
 }

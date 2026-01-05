@@ -179,6 +179,7 @@ async def process_jobs():
         
         try:
             job.status = "processing"
+            job.progress = 0.05 # Show initial activity
             job.message = "Initializing pipeline..."
             
             # Define progress callback
