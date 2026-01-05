@@ -51,6 +51,9 @@ interface StudioState {
     setConsoleOpen: (v: boolean) => void;
     setCoverImage: (v: string | null) => void;
 
+    lastCompletedTrack: { id: string; name: string; url: string } | null;
+    setLastCompletedTrack: (track: { id: string; name: string; url: string } | null) => void;
+
     setAllParams: (params: Partial<Omit<StudioState, 'setCurrentTrack' | 'setAllParams' | 'currentTrackUrl' | 'currentTrackName' | 'session' | 'setSession'>>) => void;
 }
 
@@ -109,6 +112,9 @@ export const useStore = create<StudioState>((set) => ({
     setActiveJobId: (id) => set({ activeJobId: id, isConsoleOpen: true }),
     setConsoleOpen: (v) => set({ isConsoleOpen: v }),
     setCoverImage: (v) => set({ coverImage: v }),
+
+    lastCompletedTrack: null,
+    setLastCompletedTrack: (track) => set({ lastCompletedTrack: track }),
 
     setAllParams: (params) => set((state) => ({ ...state, ...params })),
 }));

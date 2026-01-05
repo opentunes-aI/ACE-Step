@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { API_BASE } from "@/utils/api";
 import { useStudioStore } from "@/utils/store";
 
@@ -24,7 +24,25 @@ export function useChatStream() {
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
     const [showSessionList, setShowSessionList] = useState(false);
 
-    const { setPrompt, setSteps, setCfgScale, setDuration, setSeed, setLyrics, setCoverImage } = useStudioStore();
+    const { setPrompt, setSteps, setCfgScale, setDuration, setSeed, setLyrics, setCoverImage, lastCompletedTrack } = useStudioStore();
+    const handledTrackRef = useRef<string | null>(null);
+
+    // Listen for completed tracks from global store
+    useEffect(() => {
+        if (lastCompletedTrack && lastCompletedTrack.id !== handledTrackRef.current) {
+            handledTrackRef.current = lastCompletedTrack.id;
+
+            setMessages(prev => [...prev, {
+                role: "agent",
+                identity: "Studio",
+                content: [{
+                    type: 'log',
+                    message: `🎵 **Generation Complete!**\nTrack: [${lastCompletedTrack.name}](${lastCompletedTrack.url})`
+                }],
+                id: Date.now()
+            }]);
+        }
+    }, [lastCompletedTrack]);
 
     function handleSideEffect(act: any) {
         if (!act) return;

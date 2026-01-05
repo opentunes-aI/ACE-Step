@@ -1,13 +1,13 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { JobStatus, getStatus } from "@/utils/api";
+import { JobStatus, getStatus, API_BASE } from "@/utils/api";
 import { Terminal, Minimize2, Maximize2, AlertCircle, CheckCircle2 } from "lucide-react";
 import { clsx } from "clsx";
 import { syncTrackToCloud } from "@/utils/supabase";
 import { useStudioStore } from "@/utils/store";
 
 export default function ConsoleDrawer() {
-    const { activeJobId, isConsoleOpen, setConsoleOpen } = useStudioStore();
+    const { activeJobId, isConsoleOpen, setConsoleOpen, setLastCompletedTrack } = useStudioStore();
     const [logs, setLogs] = useState<{ time: string, message: string }[]>([]);
     const [status, setStatus] = useState<JobStatus | null>(null);
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -50,6 +50,14 @@ export default function ConsoleDrawer() {
                         }
 
                         if (s.result && s.result.length > 0) {
+                            const filename = s.result[0];
+                            // Notify other components (Chat)
+                            setLastCompletedTrack({
+                                id: activeJobId,
+                                name: filename,
+                                url: `${API_BASE}/outputs/${filename}`
+                            });
+
                             setLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), message: "Syncing metadata to cloud..." }]);
                             syncTrackToCloud(s.result[0]).then(() => {
                                 setLogs(prev => [...prev, { time: new Date().toLocaleTimeString(), message: "Cloud Sync: OK" }]);
