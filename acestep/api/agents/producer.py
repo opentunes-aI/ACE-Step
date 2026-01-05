@@ -42,7 +42,7 @@ def search_audio_library(query: str) -> str:
     """
     results = rag_engine.search(query, 'audio_prompt', limit=3)
     if not results:
-        return "No relevant audio examples found in memory."
+        return "No exact matches found in memory. Please use your own creative judgment to configure the studio."
     
     summary = "Found these successful examples from the library:\n"
     for r in results:

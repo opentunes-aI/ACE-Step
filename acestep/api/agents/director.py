@@ -134,6 +134,20 @@ async def process_user_intent(user_input: str, history: List[Dict[str, str]] = [
                             res = res[0]
 
                         if isinstance(res, dict):
+                            # Heuristic: Auto-wrap incomplete Producer outputs
+                            if name == "producer" and "action" not in res and any(k in res for k in ["prompt", "genre", "mood", "bpm", "steps"]):
+                                # If it looks like a config, make it a config
+                                wrapped_params = res.copy()
+                                # Fallback: Map 'genre/mood' to 'prompt' if prompt is missing
+                                if "prompt" not in wrapped_params:
+                                    parts = [str(wrapped_params.get(k)) for k in ["genre", "mood", "instruments"] if k in wrapped_params]
+                                    wrapped_params["prompt"] = ", ".join(parts)
+                                
+                                res = {
+                                    "action": "configure",
+                                    "params": wrapped_params
+                                }
+
                             valid_result = res
                             if res.get("action") == "configure":
                                 p = res.get("params", {})
