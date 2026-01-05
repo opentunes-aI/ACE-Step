@@ -24,7 +24,7 @@ export function useChatStream() {
     const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
     const [showSessionList, setShowSessionList] = useState(false);
 
-    const { setPrompt, setSteps, setCfgScale, setDuration, setSeed, setLyrics } = useStudioStore();
+    const { setPrompt, setSteps, setCfgScale, setDuration, setSeed, setLyrics, setCoverImage } = useStudioStore();
 
     function handleSideEffect(act: any) {
         if (!act) return;
@@ -38,6 +38,8 @@ export function useChatStream() {
         } else if (act.action === 'update_lyrics') {
             const text = params.lyrics || params.content || params.lyric_content || "";
             if (text) setLyrics(String(text));
+        } else if (act.action === 'generate_cover_art') {
+            if (params.image_url) setCoverImage(String(params.image_url));
         }
     }
 

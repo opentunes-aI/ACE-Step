@@ -32,7 +32,8 @@ export default function ControlPanel() {
         cfgScale, setCfgScale,
         retakeVariance, setRetakeVariance,
         repaintStart, repaintEnd, setRepaintRegion,
-        setActiveJobId
+        setActiveJobId,
+        coverImage
     } = useStudioStore();
 
     const [loading, setLoading] = useState(false);
@@ -108,8 +109,17 @@ export default function ControlPanel() {
     return (
         <div className="w-96 bg-black/40 backdrop-blur-2xl border-r border-white/10 h-full flex flex-col p-5 gap-5 shrink-0 z-20 shadow-2xl overflow-y-auto relative custom-scrollbar">
             <h2 className="text-2xl font-black font-heading tracking-tight text-white flex items-center gap-2 drop-shadow-md">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-cyan-400">Controls</span>
             </h2>
+
+            {/* Cover Art Preview (Visualizer) */}
+            {coverImage && (
+                <div className="relative w-full aspect-square rounded-xl overflow-hidden border border-white/10 group shadow-lg shrink-0 animate-in fade-in zoom-in-95 duration-500">
+                    <img src={coverImage} className="object-cover w-full h-full transition-transform group-hover:scale-105 duration-700" alt="Cover Art" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3">
+                        <span className="text-xs font-bold text-white flex items-center gap-1"><Sparkles className="w-3 h-3 text-purple-400" /> Generated Art</span>
+                    </div>
+                </div>
+            )}
 
             {/* Genre Preset */}
             <div className="space-y-3 shrink-0">

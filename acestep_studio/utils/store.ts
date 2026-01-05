@@ -26,6 +26,7 @@ interface StudioState {
     repaintEnd: number | null;
     activeJobId: string | null;
     isConsoleOpen: boolean;
+    coverImage: string | null;
 
     // Global Settings
     settings: {
@@ -48,6 +49,7 @@ interface StudioState {
     setRepaintRegion: (start: number | null, end: number | null) => void;
     setActiveJobId: (id: string | null) => void;
     setConsoleOpen: (v: boolean) => void;
+    setCoverImage: (v: string | null) => void;
 
     setAllParams: (params: Partial<Omit<StudioState, 'setCurrentTrack' | 'setAllParams' | 'currentTrackUrl' | 'currentTrackName' | 'session' | 'setSession'>>) => void;
 }
@@ -86,6 +88,7 @@ export const useStore = create<StudioState>((set) => ({
     repaintEnd: null,
     activeJobId: null,
     isConsoleOpen: false,
+    coverImage: null,
 
     setCurrentTrack: (url, name) => set({
         currentTrackUrl: url,
@@ -105,6 +108,7 @@ export const useStore = create<StudioState>((set) => ({
     setRepaintRegion: (s, e) => set({ repaintStart: s, repaintEnd: e }),
     setActiveJobId: (id) => set({ activeJobId: id, isConsoleOpen: true }),
     setConsoleOpen: (v) => set({ isConsoleOpen: v }),
+    setCoverImage: (v) => set({ coverImage: v }),
 
     setAllParams: (params) => set((state) => ({ ...state, ...params })),
 }));
