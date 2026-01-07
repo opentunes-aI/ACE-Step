@@ -48,10 +48,13 @@
 *   [x] **Sharing**: Dynamic OpenGraph cards for social media.
 *   [x] **Forking/Remixing**: "Remix this track" button preserves lineage (Parent/Child).
 
-### 4.5 Commercialization (Post-MVP)
-*   [ ] **Web3 Integration**: Mint Song as NFT.
-*   [ ] **Stems Marketplace**: Sell individual stems.
-*   [ ] **Pro Tier**: Cloud GPU Access (SaaS Mode) vs Local GPU (Free).
+### 4.5 Commercialization (SaaS Model) - Phase 2
+*   [ ] **Credit System**: Virtual currency for compute usage (e.g., 10 credits per song).
+*   [ ] **Tiers**:
+    *   **Free**: Daily credit grant (e.g., 50/day), Public tracks only, Standard Queue.
+    *   **Pro ($15/mo)**: Monthly credit grant (e.g., 1000/mo), Private tracks, Stem Separation, Priority Queue.
+*   [ ] **Payments**: Stripe Integration for Subscriptions and Credit Top-ups.
+*   [ ] **Web3 (Future)**: Optional wallet connection for NFT minting (Phase 3+).
 
 ### 4.6 Platform Support
 *   [ ] **Mobile PWA**: Installable on iOS/Android via Browser.

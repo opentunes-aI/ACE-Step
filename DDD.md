@@ -32,7 +32,22 @@
     *   `song_id` (uuid): Target.
     *   `type` (enum): 'like', 'play', 'share'.
 
-### 1.2 Storage Buckets
+### 1.2 Billing & Credits Schema (SaaS)
+*   **`wallets`**
+    *   `user_id` (uuid, PK): Refers to users.
+    *   `balance` (int): Current available credits.
+    *   `is_pro` (bool): Active subscription status.
+    *   `next_refill_at` (timestamp): For daily/monthly grants.
+
+*   **`transactions`** (Immutable Ledger)
+    *   `id` (uuid, PK).
+    *   `user_id` (uuid, FK).
+    *   `amount` (int): Negative for usage (-10), Positive for purchase (+500).
+    *   `reason` (enum): 'generation', 'remix', 'topup', 'subscription', 'daily_grant'.
+    *   `metadata` (jsonb): Links to `job_id` or `stripe_payment_id`.
+    *   `created_at` (timestamp).
+
+### 1.3 Storage Buckets
 *   [x] **`music`**: Stores generated `.wav` / `.mp3` files.
     *   Policy: Authenticated Uploads, Public Reads.
 *   [x] **`avatars`**: Stores user profile images.

@@ -28,18 +28,19 @@ This document outlines the execution phases for Opentunes.ai, mapping strategic 
 
 ---
 
-## 🚀 Phase 2: Commercialization & Assets [NEXT UP]
-*Goal: Turn the tool into a Platform with economic value.*
+## 🚀 Phase 2: Commercialization (SaaS Economy) [NEXT UP]
+*Goal: Implement a sustainable Credit-based business model.*
 
-*   **2.1 Web3 Integration** (Ref: PRD 4.5)
-    *   [ ] **NFT Minting**: Bridge `Song` (Supabase) to `NFT` (Blockchain).
-    *   [ ] **Wallet Connect**: Add `RainbowKit` or comparable to Frontend.
-*   **2.2 Marketplace** (Ref: PRD 4.5)
-    *   [ ] **Stems Export**: Implement Splitter (Backend) for Vocals/Drums.
-    *   [ ] **Storefront**: UI for browsing/buying stems.
-*   **2.3 Pro Tier** (Ref: TRD 6.0)
-    *   [ ] **Cloud GPU**: Integrate Modal/Replicate adapter for "SaaS Mode".
-    *   [ ] **Stripe Integration**: Payments for Pro access.
+*   **2.1 The Economic Engine (Internal)** (Ref: DDD 1.2)
+    *   [ ] **Database**: Create `wallets` and `transactions` tables.
+    *   [ ] **Logic**: Implement `CostCalculator` (Text2Audio = 10 credits).
+    *   [ ] **UI Component**: "Credit Balance" badge in Sidebar.
+*   **2.2 Payments & Subscriptions** (Ref: PRD 4.5)
+    *   [ ] **Stripe Integration**: Checkout for "Credit Packs" and "Pro Plans".
+    *   [ ] **Webhooks**: Secure idempotent handling of `payment.succeeded`.
+    *   [ ] **Pro Features**: Gate "Stem Separation" and "Private Mode" behind `is_pro` flag.
+*   **2.3 Web 3 Integration (Deferred)**
+    *   [ ] **Wallet Login**: Implementation moved to Phase 3.
 
 ---
 
