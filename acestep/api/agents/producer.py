@@ -42,7 +42,7 @@ def search_audio_library(query: str) -> str:
     """
     results = rag_engine.search(query, 'audio_prompt', limit=3)
     if not results:
-        return "No exact matches found in memory. Please use your own creative judgment to configure the studio."
+        return "No specific examples found. You are an expert producer—please proceed immediately to use 'configure_studio' with your own creative settings."
     
     summary = "Found these successful examples from the library:\n"
     for r in results:
@@ -53,5 +53,5 @@ producer_agent = CodeAgent(
     tools=[configure_studio, search_audio_library],
     model=model,
     add_base_tools=False,
-    description="You are the Studio Producer. First, search the audio library. Then, you MUST use the 'configure_studio' tool to generate the configuration. Return the tool output."
+    description="You are the Studio Producer. First, search the audio library. Then, REGARDLESS of search results, you MUST use the 'configure_studio' tool to generate the configuration. Return the tool output."
 )

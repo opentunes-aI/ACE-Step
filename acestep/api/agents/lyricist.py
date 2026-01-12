@@ -18,7 +18,13 @@ def update_lyrics(content: Union[str, List[str]]) -> Dict[str, Any]:
     # Defensive handling in the tool itself
     final_text = content
     if isinstance(content, list):
-        final_text = "\n".join(str(x) for x in content)
+        lines = []
+        for item in content:
+            if isinstance(item, dict):
+                lines.append(item.get("line", item.get("text", str(item))))
+            else:
+                lines.append(str(item))
+        final_text = "\n".join(lines)
     elif not isinstance(content, str):
         final_text = str(content)
 

@@ -36,7 +36,8 @@ export default function ControlPanel() {
         setActiveJobId,
         coverImage,
         parentId,
-        setParentId
+        setParentId,
+        session
     } = useStudioStore();
 
     const [loading, setLoading] = useState(false);
@@ -90,11 +91,12 @@ export default function ControlPanel() {
                 repaint_end: isRepaint ? repaintEnd! : undefined,
                 parent_id: parentId || undefined,
                 cover_image: coverImage || undefined,
+                user_id: session?.user?.id // <--- Added
             };
             const job = await generateMusic(req);
             setActiveJobId(job.job_id);
         } catch (e) {
-            alert("Failed: " + e);
+            alert("Failed: " + e); // This will catch the 402 Payment Required!
         } finally {
             setLoading(false);
         }

@@ -33,6 +33,15 @@ Opentunes is a commercial-grade **Agentic DAW (Digital Audio Workstation)** buil
     *   Node.js 18+ (for Studio UI)
     *   [Ollama](https://ollama.com) (Optional, for Agent Chat)
 
+### Configuration
+Create a `.env` file in the root directory if you want to enable Cloud Sync & Billing:
+```ini
+# Supabase Configuration (Optional - for Cloud Library & Credits)
+SUPABASE_URL="https://your-project.supabase.co"
+SUPABASE_KEY="your-anon-key"
+SUPABASE_SERVICE_ROLE_KEY="your-service-role-key" # Required for Credit Deduction logic
+```
+
 ### Quick Start
 1.  **Clone the Repo**:
     ```bash

@@ -17,6 +17,7 @@ export interface GenerationRequest {
     task?: string;
     parent_id?: string;
     cover_image?: string;
+    user_id?: string;
 }
 
 export interface JobStatus {
@@ -46,6 +47,7 @@ export async function getStatus(jobId: string): Promise<JobStatus> {
 
 export async function getHistory(): Promise<{ files: string[] }> {
     const res = await fetch(`${API_BASE}/history`);
+    if (!res.ok) return { files: [] };
     return res.json();
 }
 

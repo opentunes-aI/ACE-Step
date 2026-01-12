@@ -29,6 +29,9 @@ SUPABASE_KEY = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY") # Use Anon for now (up
 # Ideally use SUPABASE_SERVICE_ROLE_KEY if available
 if os.getenv("SUPABASE_SERVICE_ROLE_KEY"):
     SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+    print("DEBUG: Using Service Role Key for Supabase.")
+else:
+    print("DEBUG: Using Anon Key (Service Key missing).")
 
 
 # ... logging ...
@@ -77,6 +80,7 @@ class GenerationRequest(BaseModel):
     repaint_end: Optional[float] = None
     parent_id: Optional[str] = None
     cover_image: Optional[str] = None
+    user_id: Optional[str] = None
 
 class JobStatus(BaseModel):
     job_id: str
@@ -90,6 +94,20 @@ class JobStatus(BaseModel):
 # --- Global State ---
 JOBS: Dict[str, JobStatus] = {}
 TASK_QUEUE: asyncio.Queue = asyncio.Queue()
+
+# ... (Worker Logic kept as is) ...
+
+# ... (Endpoints) ...
+# (We need to re-declare previous endpoints if we use Replace Tool on a block, 
+#  but here I am targeting the GenerationRequest definition AND modifying generate_music. 
+#  I will do this in TWO replacements to be safe).
+
+# WAIT, I cannot do two non-contiguous replacements with `replace_file_content`.
+# I will use `multi_replace_file_content`.
+
+# ACTUALLY, I will just do it in one go if they are close? No, they are far apart.
+# Request Model is line ~61. Function is ~368.
+# I will use `multi_replace_file_content`.
 
 # --- Worker Logic ---
 
@@ -367,10 +385,47 @@ async def generate_lyrics_endpoint(req: LyricsRequest):
 
 @app.post("/generate", response_model=JobStatus)
 async def generate_music(req: GenerationRequest):
-    # Pipeline loading is handled by the worker (Lazy Loading)
-    # We do NOT check here to avoid blocking the request.
-    
+    # Make sure job_id is created first so we can link transactions
     job_id = str(uuid.uuid4())
+
+    # --- 1. Economic Engine Check ---
+    if not req.user_id:
+        raise HTTPException(status_code=401, detail="Authentication required. Please sign in.")
+
+    if supabase:
+        try:
+            # Check Balance
+            # Note: For production, use RPC 'deduct_credits' to prevent race conditions.
+            wallet_res = supabase.table("wallets").select("balance").eq("user_id", req.user_id).single().execute()
+            
+            if wallet_res.data:
+                balance = wallet_res.data.get("balance", 0)
+                cost = 10  # Standard Cost
+                
+                if balance < cost:
+                    raise HTTPException(status_code=402, detail=f"Insufficient credits ({balance} < {cost}). Please top up.")
+                
+                # Deduct
+                new_bal = balance - cost
+                supabase.table("wallets").update({"balance": new_bal}).eq("user_id", req.user_id).execute()
+                
+                # Transaction Log
+                supabase.table("transactions").insert({
+                    "user_id": req.user_id,
+                    "amount": -cost,
+                    "reason": "generation",
+                    "metadata": {"job_id": job_id, "task": req.task}
+                }).execute()
+                
+                logger.info(f"Billing: User {req.user_id} spent {cost} credits. New Balance: {new_bal}")
+                
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.error(f"Billing System Error: {e}")
+            raise HTTPException(status_code=500, detail=f"Billing failed: {e}")
+
+    # --- 2. Queue Job ---
     job = JobStatus(
         job_id=job_id,
         status="queued",

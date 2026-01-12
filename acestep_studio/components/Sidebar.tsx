@@ -16,15 +16,38 @@ export default function Sidebar() {
     // Store Actions
     const setCurrentTrack = useStudioStore(s => s.setCurrentTrack);
     const setAllParams = useStudioStore(s => s.setAllParams);
+    const setCredits = useStudioStore(s => s.setCredits);
+    const setIsPro = useStudioStore(s => s.setIsPro);
+    const credits = useStudioStore(s => s.credits);
+    const isPro = useStudioStore(s => s.isPro);
+
+    // Legacy / Other
     const setParentId = useStudioStore(s => s.setParentId);
     const currentTrackName = useStudioStore(s => s.currentTrackName);
 
     async function load() {
         setLoading(true);
         try {
+            // Load Wallet
+            if (supabase) {
+                try {
+                    const { data: { user } } = await supabase.auth.getUser();
+                    if (user) {
+                        const { data: wallet, error } = await supabase.from('wallets').select('*').eq('user_id', user.id).single();
+                        if (error) console.warn("Wallet fetch failed (Migration pending?):", error);
+                        if (wallet) {
+                            setCredits(wallet.balance);
+                            setIsPro(wallet.is_pro);
+                        }
+                    }
+                } catch (e) {
+                    console.warn("Wallet system unavailable:", e);
+                }
+            }
+
             if (tab === 'local') {
                 const res = await getHistory();
-                setFiles(res.files);
+                setFiles(Array.isArray(res?.files) ? res.files : []);
             } else {
                 if (!supabase) return;
                 const { data, error } = await supabase
@@ -53,14 +76,29 @@ export default function Sidebar() {
         finally { setLoading(false); }
     }
 
-    useEffect(() => { load(); }, [tab]);
+    useEffect(() => {
+        load();
+
+        // Realtime Wallet Subscription
+        if (supabase) {
+            const channel = supabase
+                .channel('wallet-changes')
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'wallets' }, (payload: any) => {
+                    const newBal = payload.new.balance;
+                    // Only update if it belongs to us (RLS usually filters, but double check)
+                    setCredits(newBal);
+                })
+                .subscribe();
+
+            return () => { supabase?.removeChannel(channel); };
+        }
+    }, [tab]);
 
     const API_BASE = API_URL;
 
     async function handleRemix(e: React.MouseEvent, filename: string, cloudMeta?: any, songId?: string) {
         e.stopPropagation();
 
-        // Reset parent ID first, then set if available
         setParentId(songId || null);
 
         let meta: any = null;
@@ -104,7 +142,7 @@ export default function Sidebar() {
         } catch (err) { alert(err); }
     }
 
-    function handleShare(e: React.MouseEvent, songId: string) {
+    async function handleShare(e: React.MouseEvent, songId: string) {
         e.stopPropagation();
         const url = `${window.location.origin}/studio/song/${songId}`;
         navigator.clipboard.writeText(url);
@@ -141,24 +179,32 @@ export default function Sidebar() {
     return (
         <div className="w-72 h-full flex flex-col shrink-0 z-10 bg-black/20 backdrop-blur-xl border-l border-white/10 shadow-2xl">
             {/* Header / Tabs */}
-            <div className="h-14 flex items-center justify-between px-4 shrink-0 border-b border-white/5 bg-white/5">
-                <div className="flex gap-1 bg-black/40 p-1 rounded-lg border border-white/5">
-                    <button
-                        onClick={() => setTab('local')}
-                        className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${tab === 'local' ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/50' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                    >
-                        Local
-                    </button>
-                    <button
-                        onClick={() => setTab('cloud')}
-                        className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${tab === 'cloud' ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-900/50' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                    >
-                        Cloud
+            <div className="flex flex-col gap-2 px-4 py-3 border-b border-white/5 bg-white/5">
+                <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Library</span>
+                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full border ${isPro ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' : 'bg-green-500/10 border-green-500/30 text-green-400'}`}>
+                        <span className="text-[10px] font-mono font-bold">{credits} ¢</span>
+                    </div>
+                </div>
+                <div className="flex items-center justify-between">
+                    <div className="flex gap-1 bg-black/40 p-1 rounded-lg border border-white/5">
+                        <button
+                            onClick={() => setTab('local')}
+                            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${tab === 'local' ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/50' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                        >
+                            Local
+                        </button>
+                        <button
+                            onClick={() => setTab('cloud')}
+                            className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${tab === 'cloud' ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-900/50' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                        >
+                            Cloud
+                        </button>
+                    </div>
+                    <button onClick={load} className="text-gray-400 hover:text-white hover:bg-white/10 transition-all p-1.5 rounded-md">
+                        <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
                     </button>
                 </div>
-                <button onClick={load} className="text-gray-400 hover:text-white hover:bg-white/10 transition-all p-1.5 rounded-md">
-                    <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-                </button>
             </div>
 
             {/* List */}

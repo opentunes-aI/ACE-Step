@@ -9,9 +9,16 @@ interface StudioState {
     setSession: (s: Session | null) => void;
 
     // Playback State
+    // Playback State
     currentTrackUrl: string | null;
     currentTrackName: string | null;
     setCurrentTrack: (url: string | null, name: string | null) => void;
+
+    // Economy
+    credits: number;
+    isPro: boolean;
+    setCredits: (v: number) => void;
+    setIsPro: (v: boolean) => void;
 
     // Form State
     prompt: string;
@@ -81,6 +88,13 @@ export const useStore = create<StudioState>((set) => ({
 
     currentTrackUrl: null,
     currentTrackName: null,
+
+    // Economy Defaults
+    credits: 0,
+    isPro: false,
+    setCredits: (v) => set({ credits: v }),
+    setIsPro: (v) => set({ isPro: v }),
+
     prompt: "upbeat techno with synth leads",
     lyrics: "",
     duration: 60,

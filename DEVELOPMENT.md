@@ -14,6 +14,9 @@ This document outlines the execution phases for Opentunes.ai, mapping strategic 
     *   [x] **UI/UX**: Responsive Next.js App with Glassmorphism theme.
     *   [x] **Waveform**: Interactive Visualization (`wavesurfer.js`).
     *   [x] **Console**: Real-time Agent Log streaming.
+    *   [ ] **Immersive Mode**: Implement collapsible Sidebars for "Focus Mode" waveform editing.
+    *   [ ] **Agent Feedback**: Add visual "Thinking/Pulse" indicators for active Agent steps.
+    *   [ ] **Mobile Layout**: Implement "Swiper" navigation for small screens.
 *   **1.3 Agentic Intelligence** (Ref: PRD 4.2, TRD 2.2)
     *   [x] **The Squad**: Director, Producer, Lyricist, Visualizer, Critic.
     *   [x] **RAG Memory**: Vector Search for Lyrics/Audio styles.
@@ -34,15 +37,18 @@ This document outlines the execution phases for Opentunes.ai, mapping strategic 
         *   Select Provider (Modal is recommended for flexible Serverless GPU).
         *   Deploy and secure API Endpoint (HTTPS).
 
+
 ---
 
 ## 🚀 Phase 2: Commercialization (SaaS Economy) [NEXT UP]
 *Goal: Implement a sustainable Credit-based business model.*
 
 *   **2.1 The Economic Engine (Internal)** (Ref: DDD 1.2)
-    *   [ ] **Database**: Create `wallets` and `transactions` tables.
-    *   [ ] **Logic**: Implement `CostCalculator` (Text2Audio = 10 credits).
-    *   [ ] **UI Component**: "Credit Balance" badge in Sidebar.
+    *   [x] **Database Schema**: Create `wallets` and `transactions` tables (`09_billing.sql`).
+    *   [x] **Onboarding Hook**: Auto-grant 50 credits on signup (Trigger).
+    *   [x] **Store Slice**: Add `useStudioStore` slice for `credits`.
+    *   [x] **UI Component**: "Credit Balance" badge in Sidebar.
+    *   [x] **Backend Logic**: Enforce credit checks in `POST /generate`.
 *   **2.2 Payments & Subscriptions** (Ref: PRD 4.5)
     *   [ ] **Stripe Integration**: Checkout for "Credit Packs" and "Pro Plans".
     *   [ ] **Webhooks**: Secure idempotent handling of `payment.succeeded`.
