@@ -48,7 +48,7 @@ export async function getStatus(jobId: string): Promise<JobStatus> {
 
 export async function getHistory(): Promise<{ files: string[] }> {
     try {
-        const res = await fetch(`${API_BASE}/history`);
+        const res = await fetch(`${API_BASE}/history?t=${Date.now()}`, { cache: 'no-store' });
         if (!res.ok) return { files: [] };
         return res.json();
     } catch (e) {
@@ -74,14 +74,14 @@ export async function getTrackMetadata(filename: string): Promise<GenerationRequ
 }
 
 export async function deleteLocalFile(filename: string): Promise<void> {
-    const res = await fetch(`${API_BASE}/files/${filename}`, {
+    const res = await fetch(`${API_BASE}/files/${encodeURIComponent(filename)}`, {
         method: "DELETE",
     });
     if (!res.ok) throw new Error("Failed to delete file");
 }
 
 export async function renameLocalFile(filename: string, newName: string): Promise<void> {
-    const res = await fetch(`${API_BASE}/files/${filename}/rename?new_name=${encodeURIComponent(newName)}`, {
+    const res = await fetch(`${API_BASE}/files/${encodeURIComponent(filename)}/rename?new_name=${encodeURIComponent(newName)}`, {
         method: "PATCH",
     });
     if (!res.ok) {
@@ -89,6 +89,8 @@ export async function renameLocalFile(filename: string, newName: string): Promis
         throw new Error(err.detail || "Rename failed");
     }
 }
+
+
 
 // Ollama Integration
 export async function getLLMModels(): Promise<string[]> {

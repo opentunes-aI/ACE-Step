@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { getHistory, getTrackMetadata, deleteLocalFile, renameLocalFile } from "@/utils/api";
-import { Music2, RefreshCw, FileAudio, Wand2, Database, Trash2, Share2, Pencil, GitFork, Download } from "lucide-react";
+import { Music2, RefreshCw, FileAudio, Wand2, Database, Trash2, Share2, Pencil, GitFork, Download, Check, AlertTriangle, Loader2 } from "lucide-react";
 import { useStudioStore } from "@/utils/store";
 import { syncTrackToCloud, deleteCloudSong, supabase } from "@/utils/supabase";
 import { getSongGradient } from "@/utils/visuals";
@@ -138,6 +138,12 @@ export default function Sidebar() {
     async function handleDeleteLocal(e: React.MouseEvent, filename: string) {
         e.stopPropagation();
         if (!confirm(`Delete "${filename}" permanently? This cannot be undone.`)) return;
+
+        // Release Lock if playing (Windows Fix)
+        if (currentTrackName === filename) {
+            setCurrentTrack(null, null);
+        }
+
         try {
             await deleteLocalFile(filename);
             load();
@@ -175,16 +181,58 @@ export default function Sidebar() {
         }
     }
 
+    const [renamingFile, setRenamingFile] = useState<string | null>(null);
+    const [syncingId, setSyncingId] = useState<string | null>(null);
+    const [syncStatus, setSyncStatus] = useState<'idle' | 'success' | 'error'>('idle');
+
+    async function finishRename(filename: string, newName: string) {
+        setRenamingFile(null);
+        const baseName = filename.replace(/\.(wav|mp3|flac|ogg)$/i, "");
+        if (!newName || newName.trim() === "" || newName === baseName) return;
+
+        try {
+            await renameLocalFile(filename, newName); // API call
+            load();
+        } catch (err: any) { alert("Rename Failed: " + err.message); }
+    }
+
+    async function handleSync(e: React.MouseEvent, filename: string) {
+        e.stopPropagation();
+        if (syncingId) return;
+
+        setSyncingId(filename);
+        setSyncStatus('idle');
+
+        try {
+            if (confirm(`Sync "${filename}" to Cloud Library?`)) {
+                await syncTrackToCloud(filename);
+                setSyncStatus('success');
+                setTimeout(() => {
+                    setSyncingId(null);
+                    setSyncStatus('idle');
+                }, 4000);
+            } else {
+                setSyncingId(null);
+            }
+        } catch (err: any) {
+            console.error(err);
+            setSyncStatus('error');
+
+            setTimeout(() => {
+                let msg = err.message || "Unknown Error";
+                if (msg.includes("row-level security") || msg.includes("Not authenticated")) {
+                    msg = "Please Log In to Cloud to sync.";
+                }
+                alert("Sync Failed: " + msg);
+                setSyncingId(null);
+                setSyncStatus('idle');
+            }, 100);
+        }
+    }
+
     async function handleRenameLocal(e: React.MouseEvent, filename: string) {
         e.stopPropagation();
-        const baseName = filename.replace(/\.(wav|mp3|flac|ogg)$/i, "");
-        const newName = prompt("Rename file (new name only, extension preserved):", baseName);
-        if (newName && newName.trim() !== "" && newName !== baseName) {
-            try {
-                await renameLocalFile(filename, newName);
-                load();
-            } catch (err: any) { alert("Rename Failed: " + err.message); }
-        }
+        setRenamingFile(filename);
     }
 
     return (
@@ -241,7 +289,23 @@ export default function Sidebar() {
                                         <FileAudio className="w-5 h-5 text-white drop-shadow-md" />
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <div className={`text-xs font-bold truncate mb-1 font-heading ${isActive ? 'text-purple-300' : 'text-gray-200'}`}>{f}</div>
+                                        {renamingFile === f ? (
+                                            <input
+                                                autoFocus
+                                                type="text"
+                                                defaultValue={f.replace(/\.(wav|mp3|flac|ogg)$/i, "")}
+                                                className="w-full bg-black/50 text-xs text-white border border-purple-500 rounded px-1 outline-none"
+                                                onBlur={(e) => finishRename(f, e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') finishRename(f, e.currentTarget.value);
+                                                    if (e.key === 'Escape') setRenamingFile(null);
+                                                    e.stopPropagation();
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                            />
+                                        ) : (
+                                            <div className={`text-xs font-bold truncate mb-1 font-heading ${isActive ? 'text-purple-300' : 'text-gray-200'}`}>{f}</div>
+                                        )}
                                         <div className="text-[10px] text-gray-500 truncate font-mono opacity-70">
                                             {f.split('_')[1] || 'Unknown Date'}
                                         </div>
@@ -249,21 +313,20 @@ export default function Sidebar() {
                                 </div>
                                 <div
                                     onClick={(e) => e.stopPropagation()}
-                                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5 bg-black/90 p-1.5 rounded-lg backdrop-blur-md shadow-xl border border-white/10 z-50"
+                                    className="absolute right-2 top-2 flex gap-1.5 bg-black/90 p-1.5 rounded-lg border border-white/10 z-50 opacity-100"
                                 >
                                     <button
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (confirm(`Sync "${f}" to Cloud Library?`)) {
-                                                syncTrackToCloud(f)
-                                                    .then(() => alert("Synced!"))
-                                                    .catch(err => alert("Sync Failed: " + err.message));
-                                            }
-                                        }}
-                                        title="Sync to Cloud Library"
+                                        onClick={(e) => handleSync(e, f)}
+                                        title={syncingId === f && syncStatus === 'success' ? "Synced Successfully" : syncingId === f && syncStatus === 'error' ? "Sync Failed" : "Sync to Cloud Library"}
                                         className="p-1 hover:text-cyan-400 transition-colors"
                                     >
-                                        <Database className="w-3.5 h-3.5" />
+                                        {syncingId === f ? (
+                                            syncStatus === 'success' ? <Check size={14} className="text-green-500" /> :
+                                                syncStatus === 'error' ? <AlertTriangle size={14} className="text-red-500" /> :
+                                                    <Loader2 size={14} className="animate-spin text-cyan-400" />
+                                        ) : (
+                                            <Database className="w-3.5 h-3.5" />
+                                        )}
                                     </button>
                                     <button
                                         onClick={(e) => {
@@ -335,7 +398,7 @@ export default function Sidebar() {
                                 </div>
                                 <div
                                     onClick={(e) => e.stopPropagation()}
-                                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5 bg-black/90 p-1.5 rounded-lg backdrop-blur-md shadow-xl border border-white/10 z-50"
+                                    className="absolute right-2 top-2 flex gap-1.5 bg-black/90 p-1.5 rounded-lg border border-white/10 z-50 opacity-100"
                                 >
                                     <button
                                         onClick={(e) => handleShare(e, song.id)}
