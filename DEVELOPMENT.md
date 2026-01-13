@@ -54,6 +54,7 @@ This document outlines the execution phases for Opentunes.ai, mapping strategic 
 *   **1.5.3 Layout Optimization**
     *   [x] **Persistent History**: Move History from toggle-sidebar to persistent Right Column (if space permits) or improved drawer.
     *   [x] **Visual Contrast**: Increase contrast on active elements vs background for "Lab" feel.
+    *   [x] **Sidebar Interactivity**: Fixed z-index layering to ensure Delete/Rename/Sync actions are clickable.
 
 ---
 

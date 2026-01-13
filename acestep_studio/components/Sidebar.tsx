@@ -247,7 +247,10 @@ export default function Sidebar() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5 bg-black/80 p-1.5 rounded-lg backdrop-blur-md shadow-xl border border-white/10 z-20">
+                                <div
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5 bg-black/90 p-1.5 rounded-lg backdrop-blur-md shadow-xl border border-white/10 z-50"
+                                >
                                     <button
                                         onClick={(e) => {
                                             e.stopPropagation();
@@ -330,7 +333,10 @@ export default function Sidebar() {
                                         </div>
                                     </div>
                                 </div>
-                                <div className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5 bg-black/80 p-1.5 rounded-lg backdrop-blur-md shadow-xl border border-white/10 z-20">
+                                <div
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1.5 bg-black/90 p-1.5 rounded-lg backdrop-blur-md shadow-xl border border-white/10 z-50"
+                                >
                                     <button
                                         onClick={(e) => handleShare(e, song.id)}
                                         title="Share Link"
