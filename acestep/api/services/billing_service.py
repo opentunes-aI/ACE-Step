@@ -12,27 +12,27 @@ if settings.STRIPE_SECRET_KEY:
 class BillingService:
     
     @staticmethod
-    def create_checkout_session(user_id: str, email: str, price_id: str):
-        """Creates a Stripe Checkout Session for Credit Packs"""
+    def create_checkout_session(user_id: str, email: str, price_id: str, is_subscription: bool = False):
+        """Creates a Stripe Checkout Session for Credit Packs or Subscriptions"""
         if not settings.STRIPE_SECRET_KEY:
             raise HTTPException(503, "Stripe not configured")
 
         try:
-            # Map simplified IDs to Stripe Price IDs (In prod, fetch from DB or Config)
-            # For now, we assume price_id IS the Stripe Price ID passed from frontend
+            mode = 'subscription' if is_subscription else 'payment'
             
             checkout_session = stripe.checkout.Session.create(
                 line_items=[{
                     'price': price_id,
                     'quantity': 1,
                 }],
-                mode='payment',
-                success_url=f"{settings.APP_BASE_URL}/studio?checkout=success",
+                mode=mode,
+                success_url=f"{settings.APP_BASE_URL}/studio?checkout=success&session_id={{CHECKOUT_SESSION_ID}}",
                 cancel_url=f"{settings.APP_BASE_URL}/studio?checkout=cancel",
                 customer_email=email,
                 metadata={
                     "user_id": user_id,
-                    "type": "credit_pack" 
+                    "type": "subscription" if is_subscription else "credit_pack",
+                    "plan_id": price_id
                 }
             )
             return {"url": checkout_session.url}
@@ -55,29 +55,55 @@ class BillingService:
         except stripe.error.SignatureVerificationError:
             raise HTTPException(400, "Invalid signature")
 
-        if event['type'] == 'checkout.session.completed':
-            session = event['data']['object']
-            metadata = session.get('metadata', {})
+        if event['type'] in ['checkout.session.completed', 'invoice.payment_succeeded']:
+            # Handle both One-time and Recurring
+            # Note: invoice.payment_succeeded is for recurring renewals
+            
+            data_obj = event['data']['object']
+            
+            # For invoice.payment_succeeded, meta is inside .lines or we rely on customer search?
+            # Actually, checkout.session.completed sends user_id. 
+            # Recurring invoices might NOT have metadata on the invoice object itself easily.
+            # Strategy: Index customer_id -> user_id mapping or rely on subscription metadata.
+            
+            # Simplified MVP: Rely on checkout.session.completed for INITIAL subscription too.
+            # For Recurring: We need to ensure subscription object has metadata.
+            
+            user_id = None
+            metadata = data_obj.get('metadata', {})
             user_id = metadata.get('user_id')
             
+            # If invoice, look deeper?
+            if event['type'] == 'invoice.payment_succeeded':
+                # Invoice -> Subscription -> Metadata
+                # This requires fetching the subscription from Stripe if not expanded.
+                try:
+                    sub_id = data_obj.get('subscription')
+                    if sub_id:
+                        sub = stripe.Subscription.retrieve(sub_id)
+                        user_id = sub.metadata.get('user_id')
+                except: pass
+
             if user_id:
-                # Calculate Credits based on Amount Paid? 
-                # Or based on Price ID lookup.
-                # For MVP, lets assume $10 = 1000 credits, $20 = 2500.
-                amount_total = session.get('amount_total', 0) # in cents
+                amount_total = data_obj.get('amount_total', 0) # in cents
                 
                 credits_to_add = 0
-                if amount_total >= 2000: credits_to_add = 2500
-                elif amount_total >= 1000: credits_to_add = 1000
-                elif amount_total >= 500: credits_to_add = 400
-                else: credits_to_add = 100 # Min pack
+                if amount_total >= 2000: credits_to_add = 3000
+                elif amount_total >= 1000: credits_to_add = 1200
+                elif amount_total >= 500: credits_to_add = 500
+                else: credits_to_add = 100
 
                 await BillingService.add_credits(
                     user_id=user_id, 
                     amount=credits_to_add, 
-                    reason="purchase",
-                    metadata={"stripe_session": session.get('id')}
+                    reason="subscription_renewal" if event['type'] == 'invoice.payment_succeeded' else "purchase",
+                    metadata={"stripe_id": data_obj.get('id')}
                 )
+                
+                # Update Subscription Status (Ref: Migration 10)
+                if event['type'] == 'checkout.session.completed' and metadata.get('type') == 'subscription':
+                     BillingService.update_subscription_status(user_id, 'active', stripe_sub_id=data_obj.get('subscription'))
+
                 logger.info(f"Stripe: Added {credits_to_add} credits to {user_id}")
 
         return {"status": "processed"}
@@ -145,4 +171,35 @@ class BillingService:
             # For Studio Refactor stability: Log error but allow generation if billing fails
             logger.error(f"Billing System Error (Non-blocking): {e}")
             # raise HTTPException(status_code=500, detail=f"Billing failed: {e}")
-            return
+    @staticmethod
+    def get_history(user_id: str, limit: int = 20):
+        """Fetch recent transaction history."""
+        supabase = get_db()
+        if not supabase: return []
+        
+        try:
+            res = supabase.table("transactions")\
+                .select("*")\
+                .eq("user_id", user_id)\
+                .order("created_at", desc=True)\
+                .limit(limit)\
+                .execute()
+            return res.data or []
+        except Exception as e:
+            logger.error(f"Failed to fetch history: {e}")
+            return []
+    @staticmethod
+    def update_subscription_status(user_id: str, status: str, stripe_sub_id: str = None):
+        """Updates subscription status in wallet."""
+        supabase = get_db()
+        if not supabase: return
+        
+        updates = {"subscription_status": status}
+        if stripe_sub_id: updates["stripe_subscription_id"] = stripe_sub_id
+        
+        # Calculate tier based on price? For now just set active.
+        # Ideally we map stripe_price_id to tier name stored in metadata
+        
+        try:
+            supabase.table("wallets").update(updates).eq("user_id", user_id).execute()
+        except: pass

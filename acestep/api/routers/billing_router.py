@@ -21,3 +21,7 @@ async def stripe_webhook(request: Request, stripe_signature: str = Header(None))
     
     body = await request.body()
     return await BillingService.handle_webhook(body, stripe_signature)
+
+@router.get("/history/{user_id}")
+async def get_history(user_id: str):
+    return {"history": BillingService.get_history(user_id)}

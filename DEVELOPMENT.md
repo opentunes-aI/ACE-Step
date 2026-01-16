@@ -84,6 +84,7 @@ This document outlines the execution phases for Opentunes.ai, mapping strategic 
 *   **2.2 Payments & Subscriptions** (Ref: PRD 4.5)
     *   [x] **Stripe Integration**: Checkout for "Credit Packs" and "Pro Plans".
     *   [x] **Webhooks**: Secure idempotent handling of `payment.succeeded`.
+    *   [ ] **Billing Dashboard**: User Settings UI to view Transaction History.
     *   [ ] **Pro Features**: Gate "Stem Separation" and "Private Mode" behind `is_pro` flag.
 *   **2.3 Web 3 Integration (Deferred)**
     *   [ ] **Wallet Login**: Implementation moved to Phase 3.

@@ -8,9 +8,10 @@ import { useCredits } from "@/hooks/useCredits";
 import { getTrackMetadata } from "@/utils/api";
 import { syncTrackToCloud } from "@/utils/supabase";
 
-import { Music2, RefreshCw, FileAudio, Wand2, Database, Trash2, Share2, Pencil, GitFork, Download, Check, AlertTriangle, Loader2, Star, Plus } from "lucide-react";
+import { Music2, RefreshCw, FileAudio, Wand2, Database, Trash2, Share2, Pencil, GitFork, Download, Check, AlertTriangle, Loader2, Star, Plus, Settings } from "lucide-react";
 import { getSongGradient } from "@/utils/visuals";
 import CreditDialog from "./CreditDialog";
+import SettingsDialog from "./SettingsDialog";
 
 // Helper for future Toast integration
 const notify = (msg: string, type: 'info' | 'error' = 'info') => {
@@ -22,6 +23,7 @@ const notify = (msg: string, type: 'info' | 'error' = 'info') => {
 export default function Sidebar() {
     const [tab, setTab] = useState<'local' | 'cloud'>('local');
     const [showCredits, setShowCredits] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
 
     // Hooks
     const localLib = useLocalLibrary();
@@ -98,6 +100,7 @@ export default function Sidebar() {
     return (
         <div className="w-full h-full flex flex-col shrink-0 z-10 bg-black/40 backdrop-blur-3xl border-l border-white/10 shadow-2xl">
             <CreditDialog isOpen={showCredits} onClose={() => setShowCredits(false)} />
+            <SettingsDialog isOpen={showSettings} onClose={() => setShowSettings(false)} />
 
             {/* Header / Tabs */}
             <div className="flex flex-col gap-4 p-5 border-b border-white/5">
@@ -106,11 +109,16 @@ export default function Sidebar() {
                         <span className="w-2 h-6 bg-gradient-to-b from-cyan-500 to-blue-500 rounded-full"></span>
                         Library
                     </h2>
-                    <div className={`flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full border transition-colors cursor-pointer hover:bg-white/5 ${isPro ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' : 'bg-green-500/10 border-green-500/30 text-green-400'}`} onClick={() => setShowCredits(true)}>
-                        <span className="text-xs font-mono font-bold">{credits} ¢</span>
-                        <div className="bg-current/20 rounded-full p-0.5 hover:bg-current/40 transition-colors">
-                            <Plus size={12} />
+                    <div className="flex items-center gap-2">
+                        <div className={`flex items-center gap-1.5 pl-3 pr-1 py-1 rounded-full border transition-colors cursor-pointer hover:bg-white/5 ${isPro ? 'bg-amber-500/10 border-amber-500/30 text-amber-500' : 'bg-green-500/10 border-green-500/30 text-green-400'}`} onClick={() => setShowCredits(true)}>
+                            <span className="text-xs font-mono font-bold">{credits} ¢</span>
+                            <div className="bg-current/20 rounded-full p-0.5 hover:bg-current/40 transition-colors">
+                                <Plus size={12} />
+                            </div>
                         </div>
+                        <button onClick={() => setShowSettings(true)} className="p-1.5 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors">
+                            <Settings size={16} />
+                        </button>
                     </div>
                 </div>
 
