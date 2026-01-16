@@ -16,7 +16,6 @@ This document outlines the execution phases for Opentunes.ai, mapping strategic 
     *   [x] **Console**: Real-time Agent Log streaming.
     *   [x] **Immersive Mode**: Implement collapsible Sidebars for "Focus Mode" waveform editing.
     *   [x] **Agent Feedback**: Add visual "Thinking/Pulse" indicators for active Agent steps.
-    *   [ ] **Mobile Layout**: Implement "Swiper" navigation for small screens.
 *   **1.3 Agentic Intelligence** (Ref: PRD 4.2, TRD 2.2)
     *   [x] **The Squad**: Director, Producer, Lyricist, Visualizer, Critic.
     *   [x] **RAG Memory**: Vector Search for Lyrics/Audio styles.
@@ -97,6 +96,7 @@ This document outlines the execution phases for Opentunes.ai, mapping strategic 
 *   **3.1 PWA (Progressive Web App)** (Ref: TRD 6.0)
     *   [ ] **Manifest**: `manifest.json` for "Add to Home Screen".
     *   [ ] **Responsive UI**: Audit Sidebar/Player for Touch targets.
+    *   [ ] **Mobile Layout**: Implement "Swiper" navigation for small screens.
     *   [ ] **Offline Mode**: Service Worker caching for Assets.
 *   **3.2 Native Wrapper** (Ref: PRD 4.6)
     *   [ ] **Capacitor**: Wrap Next.js app for App Store/Play Store.
