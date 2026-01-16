@@ -154,14 +154,50 @@ export default function AgentChat() {
                                     {messages.map((m, i) => (
                                         <MessageBubble key={i} message={m} identity={m.identity} />
                                     ))}
-                                    {loading && (
-                                        <div className="flex justify-start animate-in fade-in">
-                                            <div className="bg-secondary/30 px-4 py-2 rounded-full text-xs text-muted-foreground animate-pulse flex items-center gap-2">
-                                                <Sparkles className="w-3 h-3 animate-spin" />
-                                                Agent is thinking...
+                                    {loading && (() => {
+                                        // Determine active agent state from the last message's log trail
+                                        const lastMsg = messages[messages.length - 1];
+                                        let activeStep = "Director";
+                                        let activeAction = "Thinking...";
+
+                                        if (lastMsg && Array.isArray(lastMsg.content) && lastMsg.content.length > 0) {
+                                            const lastLog = [...lastMsg.content].reverse().find((c: any) => c.type === 'log' || c.step);
+                                            if (lastLog) {
+                                                activeStep = lastLog.step || "Studio";
+                                                activeAction = lastLog.message || "Working...";
+                                                // Shorten message if too long
+                                                if (activeAction.length > 40) activeAction = activeAction.substring(0, 37) + "...";
+                                            }
+                                        }
+
+                                        // Theme Map
+                                        const theme: Record<string, { color: string, icon: any }> = {
+                                            "Director": { color: "text-blue-400 bg-blue-400/10 border-blue-400/20", icon: Sparkles },
+                                            "Producer": { color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20", icon: Bot },
+                                            "Lyricist": { color: "text-pink-400 bg-pink-400/10 border-pink-400/20", icon: MessageSquare },
+                                            "Visualizer": { color: "text-orange-400 bg-orange-400/10 border-orange-400/20", icon: Sparkles },
+                                            "Critic": { color: "text-purple-400 bg-purple-400/10 border-purple-400/20", icon: Bot },
+                                            "Studio": { color: "text-gray-400 bg-gray-400/10 border-gray-400/20", icon: Sparkles },
+                                        };
+
+                                        const style = theme[activeStep] || theme["Studio"];
+                                        const Icon = style.icon;
+
+                                        return (
+                                            <div className="flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300">
+                                                <div className={`px-4 py-2.5 rounded-2xl border ${style.color} flex items-center gap-3 shadow-sm`}>
+                                                    <div className="relative">
+                                                        <Icon className="w-4 h-4 animate-pulse" />
+                                                        <span className="absolute top-0 right-0 w-1.5 h-1.5 bg-current rounded-full animate-ping opacity-75"></span>
+                                                    </div>
+                                                    <div className="flex flex-col">
+                                                        <span className="text-[10px] font-bold uppercase tracking-wider opacity-80">{activeStep}</span>
+                                                        <span className="text-xs font-medium opacity-90">{activeAction}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        );
+                                    })()}
                                     <div ref={messagesEndRef} />
                                 </div>
                                 {/* Input */}
