@@ -10,6 +10,7 @@ import random
 import time
 import os
 import re
+import soundfile as sf
 
 import torch
 from loguru import logger
@@ -78,6 +79,14 @@ SUPPORT_LANGUAGES = {
 }
 
 structure_pattern = re.compile(r"\[.*?\]")
+
+
+def sanitize_filename(name):
+    # Remove non-alphanumeric (keep spaces/underscores)
+    s = re.sub(r'[^\w\s-]', '', name)
+    # Replace whitespace/hyphens with underscore
+    s = re.sub(r'[-\s]+', '_', s)
+    return s.strip()[:50] or "output"
 
 
 def ensure_directory_exists(directory):
@@ -583,6 +592,7 @@ class ACEStepPipeline:
         n_max=1.0,
         n_avg=1,
         scheduler_type="euler",
+        progress=None,
     ):
 
         do_classifier_free_guidance = True
@@ -658,6 +668,8 @@ class ACEStepPipeline:
         logger.info("flowedit start from {} to {}".format(n_min, n_max))
 
         for i, t in tqdm(enumerate(timesteps), total=T_steps):
+            if progress:
+                progress((i + 1) / T_steps, desc="Generating...")
 
             if i < n_min:
                 continue
@@ -842,6 +854,7 @@ class ACEStepPipeline:
         audio2audio_enable=False,
         ref_audio_strength=0.5,
         ref_latents=None,
+        progress=None,
     ):
 
         logger.info(
@@ -1185,6 +1198,8 @@ class ACEStepPipeline:
             return sample
 
         for i, t in tqdm(enumerate(timesteps), total=num_inference_steps):
+            if progress:
+                progress((i + 1) / num_inference_steps, desc="Generating...")
 
             if is_repaint:
                 if i < n_min:
@@ -1353,6 +1368,7 @@ class ACEStepPipeline:
         sample_rate=48000,
         save_path=None,
         format="wav",
+        filename_prefix="output",
     ):
         output_audio_paths = []
         bs = latents.shape[0]
@@ -1370,25 +1386,26 @@ class ACEStepPipeline:
                 save_path=save_path,
                 sample_rate=sample_rate,
                 format=format,
+                filename_prefix=filename_prefix,
             )
             output_audio_paths.append(output_audio_path)
         return output_audio_paths
 
     def save_wav_file(
-        self, target_wav, idx, save_path=None, sample_rate=48000, format="wav"
+        self, target_wav, idx, save_path=None, sample_rate=48000, format="wav", filename_prefix="output"
     ):
         if save_path is None:
             logger.warning("save_path is None, using default path ./outputs/")
             base_path = "./outputs"
             ensure_directory_exists(base_path)
             output_path_wav = (
-                f"{base_path}/output_{time.strftime('%Y%m%d%H%M%S')}_{idx}."+format
+                f"{base_path}/{filename_prefix}_{time.strftime('%Y%m%d%H%M%S')}_{idx}."+format
             )
         else:
             ensure_directory_exists(os.path.dirname(save_path))
             if os.path.isdir(save_path):
-                logger.info(f"Provided save_path '{save_path}' is a directory. Appending timestamped filename.")
-                output_path_wav = os.path.join(save_path, f"output_{time.strftime('%Y%m%d%H%M%S')}_{idx}."+format)
+                # logger.info(f"Provided save_path '{save_path}' is a directory. Appending timestamped filename.")
+                output_path_wav = os.path.join(save_path, f"{filename_prefix}_{time.strftime('%Y%m%d%H%M%S')}_{idx}."+format)
             else:
                 output_path_wav = save_path
 
@@ -1397,9 +1414,19 @@ class ACEStepPipeline:
         if format == "ogg":
             backend = "sox"
         logger.info(f"Saving audio to {output_path_wav} using backend {backend}")
-        torchaudio.save(
-            output_path_wav, target_wav, sample_rate=sample_rate, format=format, backend=backend
-        )
+        
+        # Use soundfile directly to avoid torchaudio/torchcodec issues on Windows
+        try:
+            # target_wav is (Channels, Time), soundfile expects (Time, Channels)
+            audio_np = target_wav.squeeze().cpu().numpy()
+            if len(audio_np.shape) == 2:
+                audio_np = audio_np.T
+            sf.write(output_path_wav, audio_np, sample_rate)
+        except Exception as e:
+            logger.error(f"Failed to save with soundfile, falling back to torchaudio (which may fail): {e}")
+            torchaudio.save(
+                output_path_wav, target_wav, sample_rate=sample_rate, format=format, backend=backend
+            )
         return output_path_wav
 
     @cpu_offload("music_dcae")
@@ -1469,15 +1496,20 @@ class ACEStepPipeline:
         save_path: str = None,
         batch_size: int = 1,
         debug: bool = False,
+        progress=None,
     ):
 
         start_time = time.time()
+        if progress:
+            progress(0.02, desc="Initializing...")
 
         if audio2audio_enable and ref_audio_input is not None:
             task = "audio2audio"
 
         if not self.loaded:
             logger.warning("Checkpoint not loaded, loading checkpoint...")
+            if progress:
+                progress(0.05, desc="Loading checkpoint (this may take time)...")
             if self.quantized:
                 self.load_quantized_checkpoint(self.checkpoint_dir)
             else:
@@ -1486,6 +1518,8 @@ class ACEStepPipeline:
         self.load_lora(lora_name_or_path, lora_weight)
         load_model_cost = time.time() - start_time
         logger.info(f"Model loaded in {load_model_cost:.2f} seconds.")
+        if progress:
+            progress(0.1, desc="Model loaded. Preparing...")
 
         start_time = time.time()
 
@@ -1515,7 +1549,7 @@ class ACEStepPipeline:
         # 6 lyric
         lyric_token_idx = torch.tensor([0]).repeat(batch_size, 1).to(self.device).long()
         lyric_mask = torch.tensor([0]).repeat(batch_size, 1).to(self.device).long()
-        if len(lyrics) > 0:
+        if lyrics and len(lyrics) > 0:
             lyric_token_idx = self.tokenize_lyrics(lyrics, debug=debug)
             lyric_mask = [1] * len(lyric_token_idx)
             lyric_token_idx = (
@@ -1622,6 +1656,7 @@ class ACEStepPipeline:
                 n_max=edit_n_max,
                 n_avg=edit_n_avg,
                 scheduler_type=scheduler_type,
+                progress=progress,
             )
         else:
             target_latents = self.text2music_diffusion_process(
@@ -1655,6 +1690,7 @@ class ACEStepPipeline:
                 audio2audio_enable=audio2audio_enable,
                 ref_audio_strength=ref_audio_strength,
                 ref_latents=ref_latents,
+                progress=progress,
             )
 
         end_time = time.time()
@@ -1666,6 +1702,7 @@ class ACEStepPipeline:
             target_wav_duration_second=audio_duration,
             save_path=save_path,
             format=format,
+            filename_prefix=sanitize_filename(prompt if task != "edit" else edit_target_prompt),
         )
 
         # Clean up memory after generation
