@@ -31,6 +31,12 @@ class Settings:
     SUPABASE_ANON_KEY: str | None = os.getenv("NEXT_PUBLIC_SUPABASE_ANON_KEY")
     SUPABASE_SERVICE_KEY: str | None = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
+    # Payment (Stripe)
+    STRIPE_SECRET_KEY: str | None = os.getenv("STRIPE_SECRET_KEY")
+    STRIPE_WEBHOOK_SECRET: str | None = os.getenv("STRIPE_WEBHOOK_SECRET")
+    # Base URL for success/cancel redirects
+    APP_BASE_URL: str = os.getenv("NEXT_PUBLIC_APP_URL", "http://localhost:7865")
+
     @property
     def is_cloud_enabled(self) -> bool:
         return bool(self.SUPABASE_URL and (self.SUPABASE_ANON_KEY or self.SUPABASE_SERVICE_KEY))

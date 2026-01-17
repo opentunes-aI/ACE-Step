@@ -72,7 +72,7 @@ This document outlines the execution phases for Opentunes.ai, mapping strategic 
 
 ---
 
-## 🚀 Phase 2: Commercialization (SaaS Economy) [NEXT UP]
+## 🚀 Phase 2: Commercialization (SaaS Economy) [IN PROGRESS]
 *Goal: Implement a sustainable Credit-based business model.*
 
 *   **2.1 The Economic Engine (Internal)** (Ref: DDD 1.2)
@@ -82,9 +82,15 @@ This document outlines the execution phases for Opentunes.ai, mapping strategic 
     *   [x] **UI Component**: "Credit Balance" badge in Sidebar.
     *   [x] **Backend Logic**: Enforce credit checks in `POST /generate`.
 *   **2.2 Payments & Subscriptions** (Ref: PRD 4.5)
-    *   [ ] **Stripe Integration**: Checkout for "Credit Packs" and "Pro Plans".
-    *   [ ] **Webhooks**: Secure idempotent handling of `payment.succeeded`.
-    *   [ ] **Pro Features**: Gate "Stem Separation" and "Private Mode" behind `is_pro` flag.
+    *   [x] **Stripe Integration**: Hybrid Billing (Subscriptions + Top-ups).
+    *   [x] **Webhooks**: Secure idempotent handling of `payment.succeeded` and `invoice.payment_succeeded`.
+    *   [x] **Billing Dashboard Refactor**:
+        *   Split `SettingsDialog` into "Subscription" (Plans, Upgrades, Downgrades) and "Billing" (History, Payment Methods) tabs.
+        *   Enhanced `CreditDialog` with improved plan status logic.
+    *   [x] **Payment Method Management**: Added UI to List, Add, Detach, and Set Default Payment Methods (`usePaymentMethods` hook).
+    *   [x] **Subscription Details**: Added detailed period tracking (Start/End dates) and Renewal Status visibility.
+    *   [x] **Pro Features**: Gate "Stem Separation" and "Private Mode" behind `is_pro` flag.
+    *   [ ] **Extended Payment Methods**: Add PayPal, Apple Pay, and Google Pay support via Stripe Link.
 *   **2.3 Web 3 Integration (Deferred)**
     *   [ ] **Wallet Login**: Implementation moved to Phase 3.
 
@@ -94,10 +100,10 @@ This document outlines the execution phases for Opentunes.ai, mapping strategic 
 *Goal: Ubiquity and Engagement.*
 
 *   **3.1 PWA (Progressive Web App)** (Ref: TRD 6.0)
-    *   [ ] **Manifest**: `manifest.json` for "Add to Home Screen".
-    *   [ ] **Responsive UI**: Audit Sidebar/Player for Touch targets.
-    *   [ ] **Mobile Layout**: Implement "Swiper" navigation for small screens.
-    *   [ ] **Offline Mode**: Service Worker caching for Assets.
+    *   [x] **Manifest**: `manifest.json` for "Add to Home Screen".
+    *   [x] **Responsive UI**: Audit Sidebar/Player for Touch targets.
+    *   [x] **Mobile Layout**: Implement "Swiper" navigation / Drawers for small screens.
+    *   [x] **Offline Mode**: Service Worker caching for Assets (Next.js default).
 *   **3.2 Native Wrapper** (Ref: PRD 4.6)
     *   [ ] **Capacitor**: Wrap Next.js app for App Store/Play Store.
     *   [ ] **Notifications**: Push notifications for "Track Ready".

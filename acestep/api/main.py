@@ -10,7 +10,7 @@ from acestep.api.core.config import settings
 from acestep.api.core.model_manager import manager
 from acestep.api.services.job_service import JobService
 
-from acestep.api.routers import music_router, agent_router, system_router
+from acestep.api.routers import music_router, agent_router, system_router, billing_router
 
 # Configure Logging
 logging.basicConfig(level=logging.INFO)
@@ -47,6 +47,7 @@ app.add_middleware(
 app.include_router(system_router.router) # /ping, /health
 app.include_router(music_router.router) # /generate, /history
 app.include_router(agent_router.router) # /agent/chat, /llm/*
+app.include_router(billing_router.router, prefix="/billing") # /billing/create-checkout-session
 
 # Static Files
 app.mount("/outputs", StaticFiles(directory=settings.OUTPUT_DIR), name="outputs")
