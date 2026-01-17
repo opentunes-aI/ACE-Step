@@ -26,6 +26,8 @@ NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...
 # Optional: Point to deployed backend
 NEXT_PUBLIC_API_URL=http://localhost:7866
+# Optional: Stripe (for Billing)
+NEXT_PUBLIC_APP_URL=http://localhost:7865
 ```
 
 ### 1a. Backend Environment (For Deployment)
@@ -54,6 +56,8 @@ Run the numbered SQL scripts found in `acestep_studio/migrations/` in order:
 3.  `03_community.sql`: Social features (Likes, Play Counts, Public Access).
 4.  `04_social.sql`: Follows and Messages.
 5.  `05_web3.sql`: Web3 readiness columns.
+6.  `09_billing.sql`: Wallets and Transactions tables.
+7.  `10_subscriptions.sql`: Subscription tiers and status tracking.
 
 Open [http://localhost:7865](http://localhost:7865).
 
@@ -79,6 +83,7 @@ Open [http://localhost:7865](http://localhost:7865).
     *   **User Identity**: Rich Profiles, Custom Avatars, and Persistent Settings.
     *   **Community Feed**: Global showcase of public tracks with Author attribution.
     *   **Cloud Sync**: Hybrid "Local-First" architecture. Files stay on disk; metadata syncs to Supabase.
+    *   **Billing & Credits**: New! Subscribe to monthly plans or top-up credits via Stripe.
 *   **AI Agent Chat**: A robust multi-agent orchestrator powered by `smolagents` and `Ollama`.
     *   **Retrieval-Augmented Generation (RAG)**: Agents search a "Memory" database (Supabase `pgvector`) to find previous successful prompts and lyrics before generating.
     *   **Real-Time Streaming**: Watch the "Director", "Producer", "Lyricist", and "Critic" think and collaborate live in the chat.
