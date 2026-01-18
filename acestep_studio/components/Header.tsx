@@ -1,17 +1,28 @@
+"use client";
 import { Music, PanelLeft, PanelRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import AuthWidget from "./AuthWidget";
 import { useStudioStore } from "@/utils/store";
 import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function Header() {
     const { isLibraryOpen, setLibraryOpen, isControlsOpen, setControlsOpen } = useStudioStore();
     const pathname = usePathname();
     const isStudio = pathname === "/" || pathname?.startsWith("/studio");
 
+    const [homeLink, setHomeLink] = useState("/");
+
+    useEffect(() => {
+        if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost')) {
+            setHomeLink("https://opentunes.ai");
+        }
+    }, []);
+
     return (
         <header className="h-14 border-b border-border bg-card/50 backdrop-blur-md flex items-center justify-between px-4 shrink-0 z-50">
+            {/* ... */}
             <div className="flex items-center gap-3">
                 {isStudio && (
                     <button
@@ -22,7 +33,7 @@ export default function Header() {
                         <PanelLeft size={18} />
                     </button>
                 )}
-                <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <Link href={homeLink} className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                     <div className="w-8 h-8 relative">
                         <Image src="/logo.png" alt="Opentunes Logo" fill className="object-contain rounded-lg" />
                     </div>
