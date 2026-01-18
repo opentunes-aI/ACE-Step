@@ -3,10 +3,10 @@ from typing import Dict, Any, Optional
 from acestep.api.rag import rag_engine
 import os
 
+from acestep.api.agents.llm_utils import get_llm_model
+
 # Model Setup
-OLLAMA_URL = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
-AGENT_MODEL = os.getenv("AGENT_MODEL_ID", "ollama/qwen2.5:3b")
-model = LiteLLMModel(model_id=AGENT_MODEL, api_base=OLLAMA_URL)
+model = get_llm_model()
 
 @tool
 def configure_studio(prompt: str, title: str = "Untitled Track", steps: int = 50, cfg_scale: float = 10.0, duration: float = 60.0, seed: Optional[int] = None) -> Dict[str, Any]:
