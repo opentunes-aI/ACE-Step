@@ -1,5 +1,5 @@
 import { supabase } from "@/utils/supabase";
-import ExploreGrid from "@/app/explore/ExploreGrid";
+import ExploreGrid from "@/app/studio/explore/ExploreGrid";
 import { User, Music } from "lucide-react";
 
 export default async function ProfilePage({ params }: { params: { username: string } }) {
