@@ -3,9 +3,9 @@ from typing import Dict, Any, Union, List
 from acestep.api.rag import rag_engine
 import os
 
-OLLAMA_URL = os.getenv("OLLAMA_API_BASE", "http://localhost:11434")
-AGENT_MODEL = os.getenv("AGENT_MODEL_ID", "ollama/qwen2.5:3b")
-model = LiteLLMModel(model_id=AGENT_MODEL, api_base=OLLAMA_URL)
+from acestep.api.agents.llm_utils import get_llm_model
+
+model = get_llm_model()
 
 @tool
 def update_lyrics(content: Union[str, List[str]]) -> Dict[str, Any]:
