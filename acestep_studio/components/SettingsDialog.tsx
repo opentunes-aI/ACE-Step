@@ -17,7 +17,7 @@ interface SubDetails {
     plan_interval: string;
 }
 
-export default function SettingsDialog({ isOpen, onClose, onOpenUpgrade }: { isOpen: boolean, onClose: () => void, onOpenUpgrade: () => void }) {
+export default function SettingsDialog({ isOpen, onClose, onOpenUpgrade }: { isOpen: boolean, onClose: () => void, onOpenUpgrade?: () => void }) {
     const [activeTab, setActiveTab] = useState<'general' | 'subscription' | 'billing'>('general');
     const [userEmail, setUserEmail] = useState<string>("");
     const [mounted, setMounted] = useState(false);
@@ -120,7 +120,7 @@ export default function SettingsDialog({ isOpen, onClose, onOpenUpgrade }: { isO
                                 <div className="flex justify-between items-center">
                                     <label className="text-xs text-gray-500 uppercase font-bold">Plan Status</label>
                                     <button
-                                        onClick={isPro ? handleManageSubscription : onOpenUpgrade}
+                                        onClick={() => setActiveTab('subscription')}
                                         disabled={portalLoading}
                                         className={`text-[10px] hover:text-white underline disabled:opacity-50 ${isPro ? 'text-gray-400' : 'text-emerald-400 font-bold'}`}
                                     >
